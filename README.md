@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # PhishGuard AI
 
 PhishGuard AI is a frontend mockup for a cybersecurity SaaS platform that demonstrates two modules:
@@ -59,3 +60,6 @@ src/
 ## Notes
 
 This project is designed as an initial master thesis prototype. Future versions can add authentication, backend APIs, database storage, and real AI model integrations.
+=======
+# phishguard-ai
+>>>>>>> ec685da78b38e4734c2a068786286c1328666754

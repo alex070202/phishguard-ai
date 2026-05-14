@@ -2,19 +2,36 @@ import { BrainCircuit, FileImage, Fingerprint, ScanEye, ShieldQuestion, UploadCl
 import { useState } from 'react'
 import ResultCard from '../components/ResultCard.jsx'
 import RiskScoreCard from '../components/RiskScoreCard.jsx'
+import { saveAnalysisRecord } from '../utils/analysisHistory.js'
+import { analyzeImageFile } from '../utils/imageHeuristics.js'
 
 export default function ImageDetector() {
   const [preview, setPreview] = useState('')
   const [fileName, setFileName] = useState('')
-  const [showResult, setShowResult] = useState(false)
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [result, setResult] = useState(null)
 
   function handleFile(event) {
     const file = event.target.files?.[0]
     if (!file) return
 
     setFileName(file.name)
+    setSelectedFile(file)
     setPreview(URL.createObjectURL(file))
-    setShowResult(false)
+    setResult(null)
+  }
+
+  function handleAnalyze() {
+    if (!selectedFile) return
+
+    const nextResult = analyzeImageFile(selectedFile)
+    setResult(nextResult)
+    saveAnalysisRecord({
+      type: 'Image',
+      target: selectedFile.name,
+      score: nextResult.probability,
+      status: nextResult.status,
+    })
   }
 
   return (
@@ -45,7 +62,7 @@ export default function ImageDetector() {
             type="button"
             className="primary-button mt-5 w-full disabled:cursor-not-allowed disabled:opacity-50"
             disabled={!preview}
-            onClick={() => setShowResult(true)}
+            onClick={handleAnalyze}
           >
             <ScanEye size={18} />
             Detect AI Image
@@ -68,23 +85,24 @@ export default function ImageDetector() {
           )}
         </div>
 
-        {showResult && (
+        {result && (
           <>
             <RiskScoreCard
-              score={74}
-              label="Suspicious"
-              tone="amber"
-              caption="AI generated probability: 74%. Status: Suspicious / Possibly AI-generated."
+              score={result.probability}
+              label={result.status}
+              tone={result.tone}
+              title="AI probability"
+              caption={result.summary}
             />
             <div className="grid gap-4 md:grid-cols-3">
               <ResultCard icon={BrainCircuit} title="Texture patterns" tone="amber">
-                Fine details show synthetic-like repetition and inconsistent local texture.
+                This frontend version cannot inspect pixels deeply yet. A real model can be connected here later.
               </ResultCard>
               <ResultCard icon={Fingerprint} title="Metadata signals" tone="blue">
-                Metadata is incomplete, which can happen after editing or generated export workflows.
+                {result.explanations[0]}
               </ResultCard>
               <ResultCard icon={ScanEye} title="Visual consistency" tone="cyan">
-                Lighting and object boundaries include mild inconsistencies in the mock inspection.
+                {result.explanations.slice(1).join(' ') || 'No additional file-level signals were found.'}
               </ResultCard>
             </div>
           </>

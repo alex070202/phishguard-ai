@@ -1,4 +1,4 @@
-export default function RiskScoreCard({ score, label, tone = 'red', caption }) {
+export default function RiskScoreCard({ score, label, tone = 'red', caption, title = 'Risk score' }) {
   const tones = {
     red: 'text-cyber-red bg-cyber-red',
     amber: 'text-cyber-amber bg-cyber-amber',
@@ -10,7 +10,7 @@ export default function RiskScoreCard({ score, label, tone = 'red', caption }) {
     <div className="panel p-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-medium uppercase tracking-wider text-slate-500">Risk score</p>
+          <p className="text-sm font-medium uppercase tracking-wider text-slate-500">{title}</p>
           <p className={`mt-2 text-5xl font-bold ${tones[tone].split(' ')[0]}`}>{score}%</p>
         </div>
         <span className={`rounded-full px-3 py-1 text-sm font-semibold ${tones[tone].split(' ')[0]} bg-white/5`}>

@@ -1,21 +1,44 @@
-import { AlertTriangle, CheckCircle2, Link2, MailWarning, Radar, ShieldX } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Link2, MailWarning, Radar, ShieldX, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import ResultCard from '../components/ResultCard.jsx'
 import RiskScoreCard from '../components/RiskScoreCard.jsx'
+import { saveAnalysisRecord } from '../utils/analysisHistory.js'
+import { analyzePhishingEmail } from '../utils/phishingHeuristics.js'
 
-const indicators = [
-  'suspicious sender domain',
-  'urgency language',
-  'shortened URL',
-  'possible spoofing',
-]
+const suspiciousSample = {
+  senderEmail: 'security@paypaI-support.com',
+  suspiciousUrl: 'https://bit.ly/account-verify-now',
+  emailContent:
+    'Urgent: Your account will be suspended in 24 hours. Confirm your password and payment details immediately to avoid account locked status.',
+}
 
 export default function PhishingAnalyzer() {
-  const [showResult, setShowResult] = useState(false)
+  const [formData, setFormData] = useState({
+    senderEmail: '',
+    suspiciousUrl: '',
+    emailContent: '',
+  })
+  const [result, setResult] = useState(null)
+
+  function updateField(field, value) {
+    setFormData((currentData) => ({ ...currentData, [field]: value }))
+  }
 
   function handleSubmit(event) {
     event.preventDefault()
-    setShowResult(true)
+    const nextResult = analyzePhishingEmail(formData)
+    setResult(nextResult)
+    saveAnalysisRecord({
+      type: 'Email',
+      target: formData.senderEmail || 'Unknown sender',
+      score: nextResult.score,
+      status: `${nextResult.level} risk`,
+    })
+  }
+
+  function loadSuspiciousSample() {
+    setFormData(suspiciousSample)
+    setResult(null)
   }
 
   return (
@@ -28,14 +51,34 @@ export default function PhishingAnalyzer() {
         </p>
 
         <form onSubmit={handleSubmit} className="panel mt-7 space-y-5 p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-slate-400">Use your own content or load a demo case for presentation.</p>
+            <button type="button" className="secondary-button py-2" onClick={loadSuspiciousSample}>
+              <Sparkles size={16} />
+              Load suspicious sample
+            </button>
+          </div>
+
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-slate-300">Sender email</span>
-            <input className="input-field" type="email" placeholder="security@paypaI-support.com" />
+            <input
+              className="input-field"
+              type="email"
+              placeholder="security@paypaI-support.com"
+              value={formData.senderEmail}
+              onChange={(event) => updateField('senderEmail', event.target.value)}
+            />
           </label>
 
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-slate-300">Suspicious URL</span>
-            <input className="input-field" type="url" placeholder="https://bit.ly/account-verify" />
+            <input
+              className="input-field"
+              type="url"
+              placeholder="https://bit.ly/account-verify"
+              value={formData.suspiciousUrl}
+              onChange={(event) => updateField('suspiciousUrl', event.target.value)}
+            />
           </label>
 
           <label className="block">
@@ -43,6 +86,8 @@ export default function PhishingAnalyzer() {
             <textarea
               className="input-field min-h-48 resize-y"
               placeholder="Your account will be suspended in 24 hours. Confirm your identity immediately..."
+              value={formData.emailContent}
+              onChange={(event) => updateField('emailContent', event.target.value)}
             />
           </label>
 
@@ -54,13 +99,13 @@ export default function PhishingAnalyzer() {
       </section>
 
       <section className="space-y-5">
-        {showResult ? (
+        {result ? (
           <>
             <RiskScoreCard
-              score={87}
-              label="High"
-              tone="red"
-              caption="Mock result based on suspicious sender patterns, link behavior, and social engineering language."
+              score={result.score}
+              label={result.level}
+              tone={result.tone}
+              caption={result.summary}
             />
 
             <div className="panel p-6">
@@ -69,7 +114,7 @@ export default function PhishingAnalyzer() {
                 <h2 className="text-xl font-semibold text-white">Detected indicators</h2>
               </div>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                {indicators.map((indicator) => (
+                {result.indicators.map((indicator) => (
                   <div key={indicator} className="flex items-center gap-3 rounded-xl border border-cyber-red/20 bg-cyber-red/10 p-4">
                     <AlertTriangle className="shrink-0 text-cyber-red" size={18} />
                     <span className="text-sm text-slate-200">{indicator}</span>
@@ -80,10 +125,10 @@ export default function PhishingAnalyzer() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <ResultCard icon={MailWarning} title="Sender analysis" tone="red">
-                Domain similarity and spoofing markers suggest that the sender may be impersonating a trusted brand.
+                The sender is evaluated for invalid format, unusual domain characters, brand impersonation, and spoofing-like naming.
               </ResultCard>
               <ResultCard icon={Link2} title="URL analysis" tone="amber">
-                The submitted link uses shortening behavior and may hide its final destination from the user.
+                The submitted link is checked for shortening services, insecure HTTP usage, and mismatch with the sender domain.
               </ResultCard>
             </div>
           </>

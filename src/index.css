@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(circle at top left, rgba(45, 212, 255, 0.12), transparent 32rem),
+    radial-gradient(circle at top right, rgba(61, 220, 151, 0.08), transparent 28rem),
+    #06111f;
+}
+
+@layer components {
+  .panel {
+    @apply rounded-2xl border border-white/10 bg-white/[0.055] shadow-glow backdrop-blur;
+  }
+
+  .soft-panel {
+    @apply rounded-xl border border-white/10 bg-navy-900/70;
+  }
+
+  .input-field {
+    @apply w-full rounded-xl border border-white/10 bg-navy-950/80 px-4 py-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-cyber-cyan/70 focus:ring-2 focus:ring-cyber-cyan/20;
+  }
+
+  .primary-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-cyber-cyan px-5 py-3 text-sm font-semibold text-navy-950 transition hover:bg-cyan-300 hover:shadow-glow;
+  }
+
+  .secondary-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-slate-100 transition hover:border-cyber-cyan/50 hover:bg-cyber-cyan/10;
+  }
+}

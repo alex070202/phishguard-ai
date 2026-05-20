@@ -8,6 +8,7 @@ export const env = {
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean),
+  jwtSecret: process.env.JWT_SECRET || 'phishguard_dev_secret_change_me',
   db: {
     host: process.env.DB_HOST || 'localhost',
     port: Number(process.env.DB_PORT || 3306),

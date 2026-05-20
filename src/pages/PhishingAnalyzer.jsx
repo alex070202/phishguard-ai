@@ -6,14 +6,15 @@ import RiskScoreCard from '../components/RiskScoreCard.jsx'
 import { analyzePhishing } from '../services/api.js'
 
 const suspiciousSample = {
+  subject: 'Профилът ви е в заплаха',
   senderEmail: 'security@paypaI-support.com',
   suspiciousUrl: 'https://bit.ly/account-verify-now',
-  emailContent:
-    'Urgent: Your account will be suspended in 24 hours. Confirm your password and payment details immediately to avoid account locked status.',
+  emailContent: 'Профилът ви е в заплаха. Потвърдете акаунта си до 24 часа. Въведете данните си, за да продължите.',
 }
 
 export default function PhishingAnalyzer() {
   const [formData, setFormData] = useState({
+    subject: '',
     senderEmail: '',
     suspiciousUrl: '',
     emailContent: '',
@@ -64,6 +65,16 @@ export default function PhishingAnalyzer() {
               Load suspicious sample
             </button>
           </div>
+
+          <label className="block">
+            <span className="mb-2 block text-sm font-medium text-slate-300">Subject</span>
+            <input
+              className="input-field"
+              placeholder="Профилът ви е в заплаха"
+              value={formData.subject}
+              onChange={(event) => updateField('subject', event.target.value)}
+            />
+          </label>
 
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-slate-300">Sender email</span>

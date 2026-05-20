@@ -1,10 +1,14 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import Navbar from './components/Navbar.jsx'
+import ProtectedRoute from './components/ProtectedRoute.jsx'
 import About from './pages/About.jsx'
+import Admin from './pages/Admin.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Home from './pages/Home.jsx'
 import ImageDetector from './pages/ImageDetector.jsx'
+import Login from './pages/Login.jsx'
 import PhishingAnalyzer from './pages/PhishingAnalyzer.jsx'
+import Register from './pages/Register.jsx'
 
 export default function App() {
   return (
@@ -15,7 +19,10 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/phishing" element={<PhishingAnalyzer />} />
           <Route path="/image-detector" element={<ImageDetector />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute requireAdmin><Admin /></ProtectedRoute>} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/about" element={<About />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

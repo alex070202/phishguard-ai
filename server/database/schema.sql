@@ -5,13 +5,17 @@ CREATE TABLE IF NOT EXISTS users (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(120) NOT NULL,
   email VARCHAR(180) NOT NULL UNIQUE,
-  role VARCHAR(60) NOT NULL DEFAULT 'analyst',
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  password_hash VARCHAR(255) NOT NULL,
+  role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
+  status ENUM('active', 'banned') NOT NULL DEFAULT 'active',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS phishing_checks (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id BIGINT UNSIGNED NULL,
+  subject VARCHAR(255) NULL,
   sender_email VARCHAR(255) NULL,
   suspicious_url TEXT NULL,
   email_content MEDIUMTEXT NULL,
@@ -43,24 +47,25 @@ CREATE TABLE IF NOT EXISTS detection_results (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   source_type ENUM('phishing', 'image') NOT NULL,
   source_id BIGINT UNSIGNED NOT NULL,
+  user_id BIGINT UNSIGNED NULL,
   score TINYINT UNSIGNED NOT NULL,
   status VARCHAR(80) NOT NULL,
   indicators JSON NOT NULL,
   explanation TEXT NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_detection_source (source_type, source_id),
-  INDEX idx_detection_created (created_at)
+  INDEX idx_detection_created (created_at),
+  INDEX idx_detection_user (user_id)
 );
 
 CREATE TABLE IF NOT EXISTS audit_logs (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT UNSIGNED NULL,
   action VARCHAR(100) NOT NULL,
   entity_type VARCHAR(80) NOT NULL,
   entity_id BIGINT UNSIGNED NULL,
+  details JSON NULL,
   metadata JSON NULL,
+  ip_address VARCHAR(80) NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-
-INSERT INTO users (name, email, role)
-VALUES ('Demo Analyst', 'analyst@phishguard.local', 'analyst')
-ON DUPLICATE KEY UPDATE name = VALUES(name);

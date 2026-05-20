@@ -3,8 +3,8 @@ export function clampScore(score) {
 }
 
 export function riskLevelFromScore(score) {
-  if (score >= 75) return 'High'
-  if (score >= 45) return 'Medium'
+  if (score >= 66) return 'High'
+  if (score >= 31) return 'Medium'
   return 'Low'
 }
 

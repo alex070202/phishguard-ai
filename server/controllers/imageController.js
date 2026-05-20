@@ -13,7 +13,7 @@ export async function analyzeImageController(request, response, next) {
     let checkId = null
 
     try {
-      checkId = await saveImageAnalysis({ file: request.file, result })
+      checkId = await saveImageAnalysis({ file: request.file, result, userId: request.user?.id || null, ipAddress: request.ip })
     } catch (error) {
       persisted = false
       result.persistenceWarning = error.message

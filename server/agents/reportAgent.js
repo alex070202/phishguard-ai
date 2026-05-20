@@ -6,13 +6,13 @@ export function buildPhishingReport({ riskScore, riskLevel, detectedIndicators }
       : 'The email did not match the current high-risk phishing rules.'
 
   const recommendations =
-    riskScore >= 75
+    riskScore >= 66
       ? [
           'Do not open links or attachments from this message.',
           'Confirm the sender through a known official channel.',
           'Escalate the email to a security administrator for review.',
         ]
-      : riskScore >= 45
+      : riskScore >= 31
         ? [
             'Review the sender domain and URL destination carefully.',
             'Do not enter credentials until the request is verified.',

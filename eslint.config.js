@@ -32,6 +32,7 @@ export default [
       ...reactHooks.configs.recommended.rules,
       'react/prop-types': 'off',
       'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      'react-hooks/exhaustive-deps': 'off',
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     },
   },
@@ -42,6 +43,12 @@ export default [
         ...globals.node,
       },
     },
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
+  {
+    files: ['src/context/**/*.jsx'],
     rules: {
       'react-refresh/only-export-components': 'off',
     },

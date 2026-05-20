@@ -4,6 +4,7 @@ import { savePhishingAnalysis } from '../services/phishingService.js'
 export async function analyzePhishingController(request, response, next) {
   try {
     const payload = {
+      subject: request.body.subject || '',
       senderEmail: request.body.senderEmail || '',
       suspiciousUrl: request.body.suspiciousUrl || '',
       emailContent: request.body.emailContent || '',
@@ -19,7 +20,7 @@ export async function analyzePhishingController(request, response, next) {
     let checkId = null
 
     try {
-      checkId = await savePhishingAnalysis({ payload, result })
+      checkId = await savePhishingAnalysis({ payload, result, userId: request.user?.id || null, ipAddress: request.ip })
     } catch (error) {
       persisted = false
       result.persistenceWarning = error.message

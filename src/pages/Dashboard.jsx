@@ -13,19 +13,20 @@ export default function Dashboard() {
   const [health, setHealth] = useState({ status: 'checking', database: 'checking' })
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
-    loadDashboard()
+    loadDashboard('')
   }, [])
 
-  async function loadDashboard() {
+  async function loadDashboard(searchValue = search) {
     setIsLoading(true)
     setError('')
 
     try {
       const [statsResult, historyResult, healthResult] = await Promise.all([
         getDashboardStats(),
-        getHistory(),
+        getHistory(searchValue),
         getHealth().catch((healthError) => ({
           status: 'degraded',
           database: 'unavailable',
@@ -85,7 +86,7 @@ export default function Dashboard() {
             <Download size={16} />
             Export CSV
           </button>
-          <button type="button" className="secondary-button py-2" onClick={loadDashboard}>
+          <button type="button" className="secondary-button py-2" onClick={() => loadDashboard(search)}>
             <RefreshCw size={16} />
             Refresh
           </button>
@@ -120,6 +121,23 @@ export default function Dashboard() {
             <p className="mt-2 text-sm text-slate-400">{label}</p>
           </div>
         ))}
+      </section>
+
+      <section className="panel p-5">
+        <div className="flex flex-col gap-3 md:flex-row">
+          <input
+            className="input-field"
+            placeholder="Search by sender, subject, URL, content or risk level"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') loadDashboard(search)
+            }}
+          />
+          <button className="primary-button" type="button" onClick={() => loadDashboard(search)}>
+            Search
+          </button>
+        </div>
       </section>
 
       <section className="panel overflow-hidden">
@@ -165,7 +183,7 @@ export default function Dashboard() {
               {!isLoading && !history.length && (
                 <tr>
                   <td className="px-6 py-8 text-center text-slate-400" colSpan="6">
-                    No stored checks yet. Run an email or image analysis to populate this table.
+                    {search ? 'No matching checks found for this account.' : 'No stored checks yet. Run an email or image analysis to populate this table.'}
                   </td>
                 </tr>
               )}

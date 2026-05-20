@@ -1,63 +1,140 @@
 # PhishGuard AI
 
-PhishGuard AI is a full-stack master thesis web platform for phishing email analysis, suspicious URL inspection, image upload checks, protected dashboard history, and admin review workflows.
+PhishGuard AI is a full-stack cybersecurity web platform developed as part of a Master's thesis project in Computer Systems and Technologies.
 
-The current detection logic is rule-based and organized in backend agents. The structure is ready for later ML/AI model integration without replacing the UI or API contracts.
+The project focuses on two practical security problems:
 
-## Tech Stack
+- identifying phishing indicators in email content;
+- detecting suspicious visual content that may require AI-image verification.
 
-Frontend: React, Vite, Tailwind CSS, React Router, lucide-react
+The platform is designed as a realistic SaaS-style security workspace with authentication, protected dashboards, analysis history, user-specific records, and an admin panel.
 
-Backend: Node.js, Express, MySQL, mysql2, Multer, bcryptjs, JWT, dotenv
+## Purpose
 
-## Environment
+The goal of PhishGuard AI is to demonstrate the design and implementation of a modern web-based security system for email and image analysis.
 
-Create `.env` in the project root:
+The current version uses rule-based detection services. The architecture is prepared so that machine learning models, external reputation APIs, or image forensics services can be integrated in later development stages.
 
-```env
-PORT=5000
-CLIENT_ORIGIN=http://localhost:5173,http://127.0.0.1:5173
+## Main Features
 
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=localhost
-DB_NAME=phishguard_ai
-JWT_SECRET=phishguard_dev_secret_change_me
-```
+- User registration and login
+- JWT-based authentication
+- Protected user dashboard
+- Role-based admin panel
+- Phishing email analysis
+- Bulgarian and English phishing phrase detection
+- Suspicious sender domain detection
+- Shortened URL and domain mismatch detection
+- Image upload analysis workflow
+- File type and file size validation
+- Analysis history
+- Dashboard statistics
+- Search in previous checks
+- Audit logging for important actions
+- Admin user management with ban and unban actions
 
-In Vite development, `/api` is proxied to `http://localhost:5000`. Use `.env.local` only if the API URL is different:
+## Phishing Detection
 
-```env
-VITE_API_URL=http://localhost:5000/api
-```
+The phishing analyzer evaluates email data such as:
 
-## MySQL Migration And Seed
+- sender email address;
+- email subject;
+- suspicious URL;
+- message content;
+- urgency language;
+- prize or reward scam phrases;
+- account threat language;
+- banking and payment fraud phrases;
+- requests for passwords or personal data;
+- shortened URLs;
+- domain mismatch between sender and URL.
 
-Run:
+The analyzer supports Bulgarian phishing phrases, including examples related to fake prizes, blocked accounts, urgent confirmation requests, and payment-card fraud.
 
-```bash
-npm run db:migrate
-```
+## AI Image Detection Workflow
 
-The migration creates/updates:
+The image detector accepts image uploads and returns a structured probability-style result based on file-level indicators.
 
-- `users`
-- `phishing_checks`
-- `image_checks`
-- `detection_results`
-- `audit_logs`
+At this stage, the image module is a stable placeholder workflow. It validates uploaded files and produces a consistent analysis response, while leaving space for future integration with real AI-image detection models.
 
-It also seeds a demo admin user:
+## User Dashboard
+
+The dashboard is available only to authenticated users.
+
+Regular users can see only their own:
+
+- phishing checks;
+- image checks;
+- detection history;
+- dashboard statistics.
+
+Admin users can access global platform statistics and management tools.
+
+## Admin Panel
+
+The admin panel provides:
+
+- site-wide statistics;
+- list of registered users;
+- user ban and unban actions;
+- recent phishing and image checks;
+- audit log review;
+- search across checks and logs.
+
+Admin access is role-based and protected by backend middleware.
+
+## Audit Logging
+
+The backend records audit events for important actions such as:
+
+- user registration;
+- user login;
+- phishing check creation;
+- image check creation;
+- admin banning a user;
+- admin unbanning a user.
+
+## Technology Stack
+
+Frontend:
+
+- React
+- Vite
+- Tailwind CSS
+- React Router
+- lucide-react
+
+Backend:
+
+- Node.js
+- Express
+- MySQL
+- mysql2
+- Multer
+- bcrypt password hashing
+- JWT authentication
+- dotenv configuration
+
+## Project Structure
 
 ```text
-email: admin@phishguard.ai
-password: Admin123!
+src/
+  components/
+  context/
+  pages/
+  services/
+
+server/
+  agents/
+  config/
+  controllers/
+  database/
+  middleware/
+  routes/
+  services/
 ```
 
-The password is stored as a bcrypt hash. Change this demo account before using the project in a real environment.
-
-## Start The Project
+## Local Setup
 
 Install dependencies:
 
@@ -65,41 +142,48 @@ Install dependencies:
 npm install
 ```
 
-Start backend:
+Create a local environment file based on the required variables used by the backend. Do not commit real credentials to version control.
+
+Required backend environment variables:
+
+```text
+PORT
+CLIENT_ORIGIN
+DB_HOST
+DB_PORT
+DB_USER
+DB_PASSWORD
+DB_NAME
+JWT_SECRET
+```
+
+Run database migrations:
+
+```bash
+npm run db:migrate
+```
+
+Start the backend:
 
 ```bash
 npm run dev:backend
 ```
 
-Start frontend:
+Start the frontend:
 
 ```bash
 npm run dev:frontend
 ```
 
-Or start both:
+Start both frontend and backend:
 
 ```bash
 npm run dev:full
 ```
 
-Frontend:
+## API Overview
 
-```text
-http://localhost:5173
-```
-
-Backend:
-
-```text
-http://localhost:5000
-```
-
-## Authentication
-
-Users can register and log in from the frontend. JWT tokens are used for authenticated API calls.
-
-Auth endpoints:
+Authentication:
 
 ```http
 POST /api/auth/register
@@ -108,30 +192,11 @@ GET /api/auth/me
 POST /api/auth/logout
 ```
 
-Dashboard is protected. Regular users see only their own phishing/image checks and audit-scoped results. Admin users can access the admin panel and view global data.
-
-## API Endpoints
-
-Health:
-
-```http
-GET /api/health
-```
-
-Phishing:
+Analysis:
 
 ```http
 POST /api/phishing/analyze
-Content-Type: application/json
-Authorization: Bearer <token> optional
-```
-
-Image:
-
-```http
 POST /api/images/analyze
-Content-Type: multipart/form-data
-Authorization: Bearer <token> optional
 ```
 
 Dashboard:
@@ -152,9 +217,13 @@ GET /api/admin/logs?search=...
 GET /api/admin/checks?search=...
 ```
 
-## Bulgarian Phishing Test Examples
+System:
 
-Use these texts in the phishing analyzer:
+```http
+GET /api/health
+```
+
+## Example Bulgarian Phishing Texts For Testing
 
 ```text
 Честито! Вие печелите награда. Кликнете тук, за да я получите.
@@ -168,11 +237,13 @@ Use these texts in the phishing analyzer:
 Картата ви е блокирана. Въведете данните си, за да я активирате.
 ```
 
-The phishing agent detects Bulgarian prize scams, account threat language, urgency phrases, banking/payment fraud language, suspicious actions, sensitive data requests, shortened URLs, suspicious URLs, and domain mismatch.
+## Security Notes
 
-## Notes
+- Passwords are stored as hashes.
+- Sensitive configuration must be stored in local environment files.
+- Real database credentials and secrets should never be committed to GitHub.
+- The seeded development accounts and local configuration should be changed before deployment.
 
-- Passwords are stored with bcrypt hashes.
-- Audit logs are created for registration, login, phishing checks, image checks, and admin ban/unban actions.
-- Admin panel is visible only to users with `role = admin`.
-- Image detection is still a placeholder workflow, but upload validation and persistence are real.
+## Thesis Context
+
+This project is developed for a Master's thesis in Computer Systems and Technologies. It demonstrates the practical implementation of a web platform that combines frontend interface design, backend API development, database persistence, authentication, role-based access control, and cybersecurity-oriented analysis workflows.

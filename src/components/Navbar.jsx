@@ -21,7 +21,7 @@ export default function Navbar() {
             <p className="text-lg font-bold tracking-wide">PhishGuard AI</p>
             <p className="flex items-center gap-1 text-xs text-slate-400">
               <Activity size={12} />
-              Cyber threat intelligence mockup
+              Detection workspace
             </p>
           </div>
         </Link>

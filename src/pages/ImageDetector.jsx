@@ -1,15 +1,17 @@
 import { BrainCircuit, FileImage, Fingerprint, ScanEye, ShieldQuestion, UploadCloud } from 'lucide-react'
 import { useState } from 'react'
 import ResultCard from '../components/ResultCard.jsx'
+import RecommendationList from '../components/RecommendationList.jsx'
 import RiskScoreCard from '../components/RiskScoreCard.jsx'
-import { saveAnalysisRecord } from '../utils/analysisHistory.js'
-import { analyzeImageFile } from '../utils/imageHeuristics.js'
+import { analyzeImage } from '../services/api.js'
 
 export default function ImageDetector() {
   const [preview, setPreview] = useState('')
   const [fileName, setFileName] = useState('')
   const [selectedFile, setSelectedFile] = useState(null)
   const [result, setResult] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
 
   function handleFile(event) {
     const file = event.target.files?.[0]
@@ -19,19 +21,23 @@ export default function ImageDetector() {
     setSelectedFile(file)
     setPreview(URL.createObjectURL(file))
     setResult(null)
+    setError('')
   }
 
-  function handleAnalyze() {
+  async function handleAnalyze() {
     if (!selectedFile) return
 
-    const nextResult = analyzeImageFile(selectedFile)
-    setResult(nextResult)
-    saveAnalysisRecord({
-      type: 'Image',
-      target: selectedFile.name,
-      score: nextResult.probability,
-      status: nextResult.status,
-    })
+    setIsLoading(true)
+    setError('')
+
+    try {
+      const nextResult = await analyzeImage(selectedFile)
+      setResult(nextResult)
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -40,7 +46,7 @@ export default function ImageDetector() {
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyber-green">Visual AI module</p>
         <h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl">AI Image Detector</h1>
         <p className="mt-4 leading-7 text-slate-400">
-          Upload an image to preview it and simulate an AI-generated probability report.
+          Upload an image to the backend service for validation, file-level inspection, and a structured placeholder report.
         </p>
 
         <div className="panel mt-7 p-6">
@@ -58,14 +64,20 @@ export default function ImageDetector() {
             </div>
           )}
 
+          {error && (
+            <div className="mt-4 rounded-xl border border-cyber-red/25 bg-cyber-red/10 p-4 text-sm text-cyber-red">
+              {error}
+            </div>
+          )}
+
           <button
             type="button"
             className="primary-button mt-5 w-full disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={!preview}
+            disabled={!preview || isLoading}
             onClick={handleAnalyze}
           >
             <ScanEye size={18} />
-            Detect AI Image
+            {isLoading ? 'Analyzing...' : 'Detect AI Image'}
           </button>
         </div>
       </section>
@@ -94,6 +106,11 @@ export default function ImageDetector() {
               title="AI probability"
               caption={result.summary}
             />
+            {result.persistenceWarning && (
+              <div className="rounded-xl border border-cyber-amber/25 bg-cyber-amber/10 p-4 text-sm text-cyber-amber">
+                Analysis completed, but database persistence failed: {result.persistenceWarning}
+              </div>
+            )}
             <div className="grid gap-4 md:grid-cols-3">
               <ResultCard icon={BrainCircuit} title="Texture patterns" tone="amber">
                 This frontend version cannot inspect pixels deeply yet. A real model can be connected here later.
@@ -105,6 +122,8 @@ export default function ImageDetector() {
                 {result.explanations.slice(1).join(' ') || 'No additional file-level signals were found.'}
               </ResultCard>
             </div>
+
+            <RecommendationList items={result.recommendations} tone={result.tone} />
           </>
         )}
       </section>

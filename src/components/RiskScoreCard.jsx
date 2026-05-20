@@ -23,6 +23,11 @@ export default function RiskScoreCard({ score, label, tone = 'red', caption, tit
           style={{ width: `${score}%` }}
         />
       </div>
+      <div className="mt-2 grid grid-cols-3 text-xs text-slate-500">
+        <span>Low</span>
+        <span className="text-center">Medium</span>
+        <span className="text-right">High</span>
+      </div>
       {caption && <p className="mt-4 text-sm text-slate-400">{caption}</p>}
     </div>
   )

@@ -1,0 +1,66 @@
+CREATE DATABASE IF NOT EXISTS phishguard_ai CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE phishguard_ai;
+
+CREATE TABLE IF NOT EXISTS users (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  email VARCHAR(180) NOT NULL UNIQUE,
+  role VARCHAR(60) NOT NULL DEFAULT 'analyst',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS phishing_checks (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT UNSIGNED NULL,
+  sender_email VARCHAR(255) NULL,
+  suspicious_url TEXT NULL,
+  email_content MEDIUMTEXT NULL,
+  risk_score TINYINT UNSIGNED NOT NULL,
+  risk_level VARCHAR(30) NOT NULL,
+  detected_indicators JSON NOT NULL,
+  explanation TEXT NOT NULL,
+  analyzed_at DATETIME NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_phishing_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS image_checks (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT UNSIGNED NULL,
+  file_name VARCHAR(255) NOT NULL,
+  mime_type VARCHAR(120) NOT NULL,
+  file_size INT UNSIGNED NOT NULL,
+  ai_probability TINYINT UNSIGNED NOT NULL,
+  status VARCHAR(80) NOT NULL,
+  indicators JSON NOT NULL,
+  explanation TEXT NOT NULL,
+  analyzed_at DATETIME NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_image_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS detection_results (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  source_type ENUM('phishing', 'image') NOT NULL,
+  source_id BIGINT UNSIGNED NOT NULL,
+  score TINYINT UNSIGNED NOT NULL,
+  status VARCHAR(80) NOT NULL,
+  indicators JSON NOT NULL,
+  explanation TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_detection_source (source_type, source_id),
+  INDEX idx_detection_created (created_at)
+);
+
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  action VARCHAR(100) NOT NULL,
+  entity_type VARCHAR(80) NOT NULL,
+  entity_id BIGINT UNSIGNED NULL,
+  metadata JSON NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO users (name, email, role)
+VALUES ('Demo Analyst', 'analyst@phishguard.local', 'analyst')
+ON DUPLICATE KEY UPDATE name = VALUES(name);

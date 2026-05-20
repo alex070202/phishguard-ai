@@ -1,9 +1,9 @@
 import { AlertTriangle, CheckCircle2, Link2, MailWarning, Radar, ShieldX, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import ResultCard from '../components/ResultCard.jsx'
+import RecommendationList from '../components/RecommendationList.jsx'
 import RiskScoreCard from '../components/RiskScoreCard.jsx'
-import { saveAnalysisRecord } from '../utils/analysisHistory.js'
-import { analyzePhishingEmail } from '../utils/phishingHeuristics.js'
+import { analyzePhishing } from '../services/api.js'
 
 const suspiciousSample = {
   senderEmail: 'security@paypaI-support.com',
@@ -19,26 +19,32 @@ export default function PhishingAnalyzer() {
     emailContent: '',
   })
   const [result, setResult] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
 
   function updateField(field, value) {
     setFormData((currentData) => ({ ...currentData, [field]: value }))
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
-    const nextResult = analyzePhishingEmail(formData)
-    setResult(nextResult)
-    saveAnalysisRecord({
-      type: 'Email',
-      target: formData.senderEmail || 'Unknown sender',
-      score: nextResult.score,
-      status: `${nextResult.level} risk`,
-    })
+    setIsLoading(true)
+    setError('')
+
+    try {
+      const nextResult = await analyzePhishing(formData)
+      setResult(nextResult)
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   function loadSuspiciousSample() {
     setFormData(suspiciousSample)
     setResult(null)
+    setError('')
   }
 
   return (
@@ -47,12 +53,12 @@ export default function PhishingAnalyzer() {
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyber-cyan">Phishing module</p>
         <h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl">Phishing Email Analyzer</h1>
         <p className="mt-4 leading-7 text-slate-400">
-          Paste email content and key metadata to simulate phishing risk analysis with a structured result summary.
+          Submit email metadata to the backend rule engine for risk scoring, explanation, and database logging.
         </p>
 
         <form onSubmit={handleSubmit} className="panel mt-7 space-y-5 p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-slate-400">Use your own content or load a demo case for presentation.</p>
+            <p className="text-sm text-slate-400">Use your own content or load a controlled test case for presentation.</p>
             <button type="button" className="secondary-button py-2" onClick={loadSuspiciousSample}>
               <Sparkles size={16} />
               Load suspicious sample
@@ -91,9 +97,15 @@ export default function PhishingAnalyzer() {
             />
           </label>
 
-          <button type="submit" className="primary-button w-full">
+          {error && (
+            <div className="rounded-xl border border-cyber-red/25 bg-cyber-red/10 p-4 text-sm text-cyber-red">
+              {error}
+            </div>
+          )}
+
+          <button type="submit" className="primary-button w-full disabled:cursor-not-allowed disabled:opacity-60" disabled={isLoading}>
             <Radar size={18} />
-            Analyze
+            {isLoading ? 'Analyzing...' : 'Analyze'}
           </button>
         </form>
       </section>
@@ -107,6 +119,11 @@ export default function PhishingAnalyzer() {
               tone={result.tone}
               caption={result.summary}
             />
+            {result.persistenceWarning && (
+              <div className="rounded-xl border border-cyber-amber/25 bg-cyber-amber/10 p-4 text-sm text-cyber-amber">
+                Analysis completed, but database persistence failed: {result.persistenceWarning}
+              </div>
+            )}
 
             <div className="panel p-6">
               <div className="flex items-center gap-3">
@@ -131,6 +148,8 @@ export default function PhishingAnalyzer() {
                 The submitted link is checked for shortening services, insecure HTTP usage, and mismatch with the sender domain.
               </ResultCard>
             </div>
+
+            <RecommendationList items={result.recommendations} tone={result.tone} />
           </>
         ) : (
           <div className="panel flex min-h-[28rem] items-center justify-center p-8 text-center">
@@ -138,7 +157,7 @@ export default function PhishingAnalyzer() {
               <CheckCircle2 className="mx-auto text-cyber-green" size={42} />
               <h2 className="mt-5 text-2xl font-semibold text-white">Ready to analyze</h2>
               <p className="mt-3 max-w-md text-slate-400">
-                Submit the form to display the mock phishing risk score, detected indicators, and explanation cards.
+                Submit the form to request a backend analysis and render the returned indicators.
               </p>
             </div>
           </div>

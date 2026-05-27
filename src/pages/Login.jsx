@@ -19,6 +19,10 @@ export default function Login() {
       const user = await loginUser(formData)
       navigate(user.role === 'admin' ? '/admin' : '/dashboard')
     } catch (requestError) {
+      if (requestError.message.toLowerCase().includes('banned')) {
+        navigate('/account-banned')
+        return
+      }
       setError(requestError.message)
     } finally {
       setIsLoading(false)

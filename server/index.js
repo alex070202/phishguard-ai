@@ -5,6 +5,7 @@ import { env } from './config/env.js'
 import { adminRoutes } from './routes/adminRoutes.js'
 import { authRoutes } from './routes/authRoutes.js'
 import { dashboardRoutes } from './routes/dashboardRoutes.js'
+import { contactRoutes } from './routes/contactRoutes.js'
 import { imageRoutes } from './routes/imageRoutes.js'
 import { phishingRoutes } from './routes/phishingRoutes.js'
 
@@ -42,6 +43,7 @@ app.use('/api/phishing', phishingRoutes)
 app.use('/api/images', imageRoutes)
 app.use('/api/auth', authRoutes)
 app.use('/api/admin', adminRoutes)
+app.use('/api/contact', contactRoutes)
 app.use('/api', dashboardRoutes)
 
 app.use((request, response) => {

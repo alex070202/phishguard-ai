@@ -142,3 +142,11 @@ export function getAdminChecks(search = '') {
   const query = search ? `?search=${encodeURIComponent(search)}` : ''
   return requestJson(`/admin/checks${query}`, { headers: authHeaders() })
 }
+
+export function sendContactMessage(payload) {
+  return requestJson('/contact', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}

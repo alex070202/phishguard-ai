@@ -31,6 +31,16 @@ async function runMigration() {
     await ensureColumn(connection, dbName, 'audit_logs', 'user_id', 'BIGINT UNSIGNED NULL AFTER id')
     await ensureColumn(connection, dbName, 'audit_logs', 'details', 'JSON NULL AFTER entity_id')
     await ensureColumn(connection, dbName, 'audit_logs', 'ip_address', 'VARCHAR(80) NULL AFTER metadata')
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS contact_messages (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(120) NOT NULL,
+        email VARCHAR(180) NOT NULL,
+        message TEXT NOT NULL,
+        status ENUM('new', 'reviewed') NOT NULL DEFAULT 'new',
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
 
     const adminPasswordHash = await bcrypt.hash('Admin123!', 12)
     const fallbackPasswordHash = await bcrypt.hash('ChangeMe123!', 12)

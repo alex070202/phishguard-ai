@@ -30,10 +30,10 @@ body {
   }
 
   .primary-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-cyber-cyan px-5 py-3 text-sm font-semibold text-navy-950 transition hover:bg-cyan-300;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-cyber-cyan px-5 py-3 text-sm font-semibold text-navy-950 outline-none transition hover:bg-cyan-300 focus:ring-2 focus:ring-cyber-cyan/40 focus:ring-offset-2 focus:ring-offset-navy-950;
   }
 
   .secondary-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-slate-100 transition hover:border-cyber-cyan/50 hover:bg-cyber-cyan/10;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-slate-100 outline-none transition hover:border-cyber-cyan/50 hover:bg-cyber-cyan/10 focus:ring-2 focus:ring-cyber-cyan/30;
   }
 }

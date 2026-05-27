@@ -69,8 +69,14 @@ export async function analyzeImage(file) {
   return {
     probability: result.aiProbability,
     status: result.status,
+    confidence: result.confidence,
+    modelName: result.modelName,
+    modelAvailable: result.modelAvailable,
+    fallbackUsed: result.fallbackUsed,
     tone: toneFromScore(result.aiProbability),
     explanations: result.indicators.map((indicator) => indicator.label),
+    modelExplanation: result.modelExplanation || [],
+    signals: result.signals,
     rawIndicators: result.indicators,
     recommendations: result.recommendations,
     summary: result.explanation,
@@ -87,6 +93,10 @@ export function getDashboardStats() {
 export function getHistory(search = '') {
   const query = search ? `?search=${encodeURIComponent(search)}` : ''
   return requestJson(`/history${query}`, { headers: authHeaders() })
+}
+
+export function clearMyHistory() {
+  return requestJson('/history/me', { method: 'DELETE', headers: authHeaders() })
 }
 
 export function getHealth() {

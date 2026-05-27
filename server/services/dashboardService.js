@@ -1,4 +1,5 @@
 import { pool } from '../config/db.js'
+import { createAuditLog } from './auditService.js'
 
 function parseJson(value) {
   if (!value) return []
@@ -15,10 +16,10 @@ export async function getDashboardStats(user) {
   const userFilter = isAdmin ? '1 = 1' : 'user_id = :userId'
   const [[totals]] = await pool.execute(`
     SELECT
-      (SELECT COUNT(*) FROM phishing_checks WHERE ${userFilter}) AS phishingChecks,
-      (SELECT COUNT(*) FROM image_checks WHERE ${userFilter}) AS imageChecks,
-      (SELECT COUNT(*) FROM detection_results WHERE score >= 66 AND ${userFilter}) AS highRiskDetections,
-      (SELECT COUNT(*) FROM detection_results WHERE ${userFilter}) AS totalChecks
+      (SELECT COUNT(*) FROM phishing_checks WHERE deleted_at IS NULL AND ${userFilter}) AS phishingChecks,
+      (SELECT COUNT(*) FROM image_checks WHERE deleted_at IS NULL AND ${userFilter}) AS imageChecks,
+      (SELECT COUNT(*) FROM detection_results WHERE deleted_at IS NULL AND score >= 66 AND ${userFilter}) AS highRiskDetections,
+      (SELECT COUNT(*) FROM detection_results WHERE deleted_at IS NULL AND ${userFilter}) AS totalChecks
   `, { userId: user.id })
 
   return {
@@ -38,6 +39,8 @@ export async function getAnalysisHistory(user, search = '') {
   if (!isAdmin) {
     filters.push('dr.user_id = :userId')
   }
+
+  filters.push('dr.deleted_at IS NULL')
 
   if (search) {
     filters.push(`(
@@ -85,4 +88,36 @@ export async function getAnalysisHistory(user, search = '') {
     explanation: row.explanation,
     date: new Date(row.createdAt).toISOString().slice(0, 10),
   }))
+}
+
+export async function clearUserHistory(user, ipAddress) {
+  const now = new Date()
+  await pool.execute(
+    `UPDATE detection_results
+     SET deleted_at = :now
+     WHERE user_id = :userId AND deleted_at IS NULL`,
+    { userId: user.id, now },
+  )
+  await pool.execute(
+    `UPDATE phishing_checks
+     SET deleted_at = :now
+     WHERE user_id = :userId AND deleted_at IS NULL`,
+    { userId: user.id, now },
+  )
+  await pool.execute(
+    `UPDATE image_checks
+     SET deleted_at = :now
+     WHERE user_id = :userId AND deleted_at IS NULL`,
+    { userId: user.id, now },
+  )
+
+  await createAuditLog({
+    userId: user.id,
+    action: 'USER_CLEARED_HISTORY',
+    entityType: 'detection_results',
+    details: { scope: 'own_scan_history' },
+    ipAddress,
+  })
+
+  return { ok: true }
 }

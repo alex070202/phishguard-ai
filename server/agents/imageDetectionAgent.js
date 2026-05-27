@@ -1,7 +1,8 @@
 import { buildImageReport } from './reportAgent.js'
 import { imageStatusFromProbability, scoreIndicators } from './riskScoringAgent.js'
+import { predictAiImage } from '../services/imageModelService.js'
 
-export function analyzeImageFile(file) {
+export async function analyzeImageFile(file) {
   const fileName = file.originalname.toLowerCase()
   const indicatorMatches = [
     {
@@ -34,8 +35,14 @@ export function analyzeImageFile(file) {
     },
   ]
 
-  const { score, detectedIndicators } = scoreIndicators(28, indicatorMatches)
-  const status = imageStatusFromProbability(score)
+  const modelPrediction = await predictAiImage(file)
+  const fallbackSignals = buildFallbackSignals(file)
+  const modelScore = modelPrediction.modelAvailable ? Math.round(modelPrediction.aiProbability * 100) : null
+  const { score: fallbackScore, detectedIndicators } = scoreIndicators(28, indicatorMatches)
+  const score = modelScore ?? fallbackScore
+  const status = modelPrediction.status || (modelPrediction.label && modelPrediction.modelAvailable
+    ? modelPrediction.label
+    : imageStatusFromProbability(score))
   const { explanation, recommendations } = buildImageReport({
     aiProbability: score,
     status,
@@ -47,8 +54,32 @@ export function analyzeImageFile(file) {
     aiProbability: score,
     status,
     indicators: detectedIndicators,
-    explanation,
+    explanation: modelPrediction.modelAvailable ? modelPrediction.explanation.join(' ') : explanation,
     recommendations,
+    confidence: modelPrediction.confidence ?? score / 100,
+    modelName: modelPrediction.modelName,
+    modelAvailable: modelPrediction.modelAvailable,
+    fallbackUsed: modelPrediction.fallbackUsed,
+    modelExplanation: modelPrediction.explanation,
+    signals: modelPrediction.signals || fallbackSignals,
     analyzedAt,
+  }
+}
+
+function buildFallbackSignals(file) {
+  return {
+    exifPresent: false,
+    softwareTag: null,
+    width: 'unknown',
+    height: 'unknown',
+    megapixels: null,
+    format: file.mimetype.split('/')[1]?.toUpperCase() || 'unknown',
+    mimeType: file.mimetype,
+    fileSizeBytes: file.size,
+    bytesPerPixel: null,
+    compressionIndicators: [
+      file.size < 180000 ? 'small_file_size' : 'file_size_not_small',
+      'node_fallback_metadata_only',
+    ],
   }
 }

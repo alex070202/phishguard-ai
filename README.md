@@ -7,35 +7,32 @@ The project focuses on two practical security problems:
 - identifying phishing indicators in email content;
 - detecting suspicious visual content that may require AI-image verification.
 
-The platform is designed as a realistic SaaS-style security workspace with authentication, protected dashboards, analysis history, user-specific records, and an admin panel.
-
-## Purpose
-
-The goal of PhishGuard AI is to demonstrate the design and implementation of a modern web-based security system for email and image analysis.
-
-The current version uses rule-based detection services. The architecture is prepared so that machine learning models, external reputation APIs, or image forensics services can be integrated in later development stages.
+The platform is designed as a realistic SaaS-style security workspace with authentication, protected dashboards, analysis history, user-specific records, admin tools, audit logging and policy pages.
 
 ## Main Features
 
 - User registration and login
 - JWT-based authentication
 - Protected user dashboard
+- User-scoped scan history
+- Clear History option for authenticated users
 - Role-based admin panel
 - Phishing email analysis
 - Bulgarian and English phishing phrase detection
 - Suspicious sender domain detection
 - Shortened URL and domain mismatch detection
 - Image upload analysis workflow
+- Optional AI image model service integration
 - File type and file size validation
-- Analysis history
 - Dashboard statistics
 - Search in previous checks
 - Audit logging for important actions
 - Admin user management with ban and unban actions
+- Footer pages for privacy, terms, cookies, security, FAQ and contact
 
 ## Phishing Detection
 
-The phishing analyzer evaluates email data such as:
+The phishing analyzer evaluates:
 
 - sender email address;
 - email subject;
@@ -49,13 +46,26 @@ The phishing analyzer evaluates email data such as:
 - shortened URLs;
 - domain mismatch between sender and URL.
 
-The analyzer supports Bulgarian phishing phrases, including examples related to fake prizes, blocked accounts, urgent confirmation requests, and payment-card fraud.
+The analyzer supports Bulgarian phishing phrases, including examples related to fake prizes, blocked accounts, urgent confirmation requests and payment-card fraud.
 
-## AI Image Detection Workflow
+## AI Image Detection Architecture
 
-The image detector accepts image uploads and returns a structured probability-style result based on file-level indicators.
+The image detector accepts image uploads and returns a structured probability-style result.
 
-At this stage, the image module is a stable placeholder workflow. It validates uploaded files and produces a consistent analysis response, while leaving space for future integration with real AI-image detection models.
+The Node.js backend first attempts to call a separate AI image model service. If the model service is available, the response includes:
+
+- AI probability;
+- label/status;
+- confidence;
+- model name;
+- model explanation.
+
+If the model service is not configured or unavailable, the backend uses fallback file-level analysis and clearly marks the response:
+
+- `modelAvailable: false`
+- `fallbackUsed: true`
+
+The included Python service loads the pretrained HuggingFace model `jacoballessio/ai-image-detect-distilled` when the service starts. The final image result combines 85% pretrained model score with 15% metadata and forensic signals. If the model cannot be loaded, the service returns a fallback result and clearly marks it as fallback.
 
 ## User Dashboard
 
@@ -67,6 +77,8 @@ Regular users can see only their own:
 - image checks;
 - detection history;
 - dashboard statistics.
+
+Users can clear their own scan history from the Dashboard. This action soft-deletes the current user's phishing, image and detection result records. It does not affect other users' data. Administrative audit records may be preserved for security and abuse-prevention purposes.
 
 Admin users can access global platform statistics and management tools.
 
@@ -82,17 +94,6 @@ The admin panel provides:
 - search across checks and logs.
 
 Admin access is role-based and protected by backend middleware.
-
-## Audit Logging
-
-The backend records audit events for important actions such as:
-
-- user registration;
-- user login;
-- phishing check creation;
-- image check creation;
-- admin banning a user;
-- admin unbanning a user.
 
 ## Technology Stack
 
@@ -115,6 +116,15 @@ Backend:
 - JWT authentication
 - dotenv configuration
 
+Optional ML service:
+
+- Python
+- FastAPI
+- Uvicorn
+- HuggingFace Transformers
+- PyTorch
+- Pillow
+
 ## Project Structure
 
 ```text
@@ -132,6 +142,12 @@ server/
   middleware/
   routes/
   services/
+
+ml-service/
+  app.py
+  requirements.txt
+  models/
+  utils/
 ```
 
 ## Local Setup
@@ -142,7 +158,7 @@ Install dependencies:
 npm install
 ```
 
-Create a local environment file based on the required variables used by the backend. Do not commit real credentials to version control.
+Create a local environment file based on the required backend variables. Do not commit real credentials or secrets to version control.
 
 Required backend environment variables:
 
@@ -155,6 +171,7 @@ DB_USER
 DB_PASSWORD
 DB_NAME
 JWT_SECRET
+AI_IMAGE_MODEL_URL
 ```
 
 Run database migrations:
@@ -181,6 +198,34 @@ Start both frontend and backend:
 npm run dev:full
 ```
 
+## AI Image Model Service
+
+Run the FastAPI service:
+
+```bash
+cd ml-service
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app:app --reload --port 8001
+```
+
+Configure the backend to call the service:
+
+```text
+AI_IMAGE_MODEL_URL=http://localhost:8001/predict-ai-image
+```
+
+The service loads `jacoballessio/ai-image-detect-distilled` once on startup. It also extracts metadata and forensic signals:
+
+- EXIF present or missing
+- software tag when available
+- image dimensions
+- image format
+- compression indicators
+
+The result is probabilistic. It should support review workflows, not replace forensic proof or human validation.
+
 ## API Overview
 
 Authentication:
@@ -204,6 +249,7 @@ Dashboard:
 ```http
 GET /api/dashboard/stats
 GET /api/history?search=...
+DELETE /api/history/me
 ```
 
 Admin:
@@ -215,6 +261,12 @@ PATCH /api/admin/users/:id/ban
 PATCH /api/admin/users/:id/unban
 GET /api/admin/logs?search=...
 GET /api/admin/checks?search=...
+```
+
+Contact:
+
+```http
+POST /api/contact
 ```
 
 System:
@@ -242,8 +294,9 @@ GET /api/health
 - Passwords are stored as hashes.
 - Sensitive configuration must be stored in local environment files.
 - Real database credentials and secrets should never be committed to GitHub.
-- The seeded development accounts and local configuration should be changed before deployment.
+- The local configuration should be changed before deployment.
+- Rule-based and placeholder AI results should be treated as security indicators, not final forensic proof.
 
 ## Thesis Context
 
-This project is developed for a Master's thesis in Computer Systems and Technologies. It demonstrates the practical implementation of a web platform that combines frontend interface design, backend API development, database persistence, authentication, role-based access control, and cybersecurity-oriented analysis workflows.
+This project is developed for a Master's thesis in Computer Systems and Technologies. It demonstrates frontend interface design, backend API development, database persistence, authentication, role-based access control, audit logging, dashboard workflows and cybersecurity-oriented analysis services.

@@ -46,7 +46,7 @@ export default function ImageDetector() {
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyber-green">Visual AI module</p>
         <h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl">AI Image Detector</h1>
         <p className="mt-4 leading-7 text-slate-400">
-          Upload an image to the backend service for validation, file-level inspection, and a structured placeholder report.
+          Upload an image for model-assisted AI probability scoring, metadata review, and fallback file-level inspection when the model service is unavailable.
         </p>
 
         <div className="panel mt-7 p-6">
@@ -106,6 +106,49 @@ export default function ImageDetector() {
               title="AI probability"
               caption={result.summary}
             />
+            <div className="panel p-5">
+              <h2 className="text-lg font-semibold text-white">Model status</h2>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="soft-panel p-4">
+                  <p className="text-xs uppercase tracking-wider text-slate-500">Model</p>
+                  <p className="mt-2 text-sm font-semibold text-white">{result.modelName || 'Not configured'}</p>
+                </div>
+                <div className="soft-panel p-4">
+                  <p className="text-xs uppercase tracking-wider text-slate-500">Confidence</p>
+                  <p className="mt-2 text-sm font-semibold text-white">{Math.round((result.confidence || 0) * 100)}%</p>
+                </div>
+                <div className="soft-panel p-4">
+                  <p className="text-xs uppercase tracking-wider text-slate-500">Model available</p>
+                  <p className={result.modelAvailable ? 'mt-2 text-sm font-semibold text-cyber-green' : 'mt-2 text-sm font-semibold text-cyber-amber'}>
+                    {result.modelAvailable ? 'Yes' : 'No'}
+                  </p>
+                </div>
+                <div className="soft-panel p-4">
+                  <p className="text-xs uppercase tracking-wider text-slate-500">Fallback used</p>
+                  <p className={result.fallbackUsed ? 'mt-2 text-sm font-semibold text-cyber-amber' : 'mt-2 text-sm font-semibold text-cyber-green'}>
+                    {result.fallbackUsed ? 'Yes' : 'No'}
+                  </p>
+                </div>
+              </div>
+              {result.fallbackUsed && (
+                <p className="mt-4 rounded-lg border border-cyber-amber/25 bg-cyber-amber/10 p-3 text-sm text-cyber-amber">
+                  Fallback analysis used - AI model service is not available.
+                </p>
+              )}
+            </div>
+            {result.signals && (
+              <div className="panel p-5">
+                <h2 className="text-lg font-semibold text-white">Detected signals</h2>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <Signal label="EXIF" value={result.signals.exifPresent ? 'Present' : 'Missing'} />
+                  <Signal label="Software" value={result.signals.softwareTag || 'Not found'} />
+                  <Signal label="Dimensions" value={`${result.signals.width} x ${result.signals.height}`} />
+                  <Signal label="Format" value={result.signals.format || 'Unknown'} />
+                  <Signal label="File size" value={`${result.signals.fileSizeBytes} bytes`} />
+                  <Signal label="Compression" value={(result.signals.compressionIndicators || []).join(', ') || 'Not available'} />
+                </div>
+              </div>
+            )}
             {result.persistenceWarning && (
               <div className="rounded-xl border border-cyber-amber/25 bg-cyber-amber/10 p-4 text-sm text-cyber-amber">
                 Analysis completed, but database persistence failed: {result.persistenceWarning}
@@ -113,7 +156,7 @@ export default function ImageDetector() {
             )}
             <div className="grid gap-4 md:grid-cols-3">
               <ResultCard icon={BrainCircuit} title="Texture patterns" tone="amber">
-                This frontend version cannot inspect pixels deeply yet. A real model can be connected here later.
+                {result.modelExplanation?.[0] || 'Model-level explanation is available when the AI image service is running.'}
               </ResultCard>
               <ResultCard icon={Fingerprint} title="Metadata signals" tone="blue">
                 {result.explanations[0]}
@@ -127,6 +170,15 @@ export default function ImageDetector() {
           </>
         )}
       </section>
+    </div>
+  )
+}
+
+function Signal({ label, value }) {
+  return (
+    <div className="soft-panel p-4">
+      <p className="text-xs uppercase tracking-wider text-slate-500">{label}</p>
+      <p className="mt-2 break-words text-sm font-semibold text-white">{value}</p>
     </div>
   )
 }

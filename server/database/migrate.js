@@ -25,7 +25,10 @@ async function runMigration() {
     await connection.query("ALTER TABLE users MODIFY role ENUM('user', 'admin') NOT NULL DEFAULT 'user'")
 
     await ensureColumn(connection, dbName, 'phishing_checks', 'subject', 'VARCHAR(255) NULL AFTER user_id')
+    await ensureColumn(connection, dbName, 'phishing_checks', 'deleted_at', 'DATETIME NULL AFTER analyzed_at')
+    await ensureColumn(connection, dbName, 'image_checks', 'deleted_at', 'DATETIME NULL AFTER analyzed_at')
     await ensureColumn(connection, dbName, 'detection_results', 'user_id', 'BIGINT UNSIGNED NULL AFTER source_id')
+    await ensureColumn(connection, dbName, 'detection_results', 'deleted_at', 'DATETIME NULL AFTER explanation')
     await ensureIndex(connection, dbName, 'detection_results', 'idx_detection_user', 'CREATE INDEX idx_detection_user ON detection_results (user_id)')
 
     await ensureColumn(connection, dbName, 'audit_logs', 'user_id', 'BIGINT UNSIGNED NULL AFTER id')

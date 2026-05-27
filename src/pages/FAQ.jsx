@@ -2,10 +2,10 @@ import PolicyLayout from '../components/PolicyLayout.jsx'
 
 const questions = [
   ['How does phishing detection work?', 'The phishing module uses backend rules to evaluate sender domains, suspicious URLs, urgency language, Bulgarian scam phrases, sensitive data requests, and domain mismatch.'],
-  ['How are AI-generated images analyzed?', 'The current image module validates uploads and checks file-level indicators. It is structured so a real AI-image model can be added later.'],
+  ['How are AI-generated images analyzed?', 'Uploaded images are validated and analyzed through the image detection module. When the model service is running, PhishGuard AI uses a pretrained HuggingFace classifier to estimate the probability that an image is AI-generated. The final result combines the model prediction with metadata and forensic signals such as EXIF presence, software tags, dimensions, format and compression indicators.'],
   ['Is my uploaded data stored?', 'The platform stores analysis records and file metadata for dashboard history. Access is scoped by user role.'],
-  ['Can I delete my history?', 'A production deployment should expose account and history deletion workflows. The current thesis implementation focuses on protected storage and admin review.'],
-  ['How accurate is the detection system?', 'The current results are rule-based indicators. They are useful for demonstration and workflow validation, but should not be treated as final forensic conclusions.'],
+  ['Can I delete my history?', 'Yes. Logged-in users can delete their own scan history from the Dashboard using the Clear History option. The action only affects the current user’s phishing and image scan records and does not delete other users’ data. Administrative audit records may be preserved for security and abuse-prevention purposes.'],
+  ['How accurate is the detection system?', 'Detection is probabilistic and should not be treated as absolute proof. Phishing results are rule-based security indicators, while image results combine model probability with metadata signals when the AI model service is available. High-risk results should still be reviewed by a human analyst.'],
   ['Who can access dashboard data?', 'Regular users can access only their own records. Admin users can review global checks and logs through the admin panel.'],
 ]
 

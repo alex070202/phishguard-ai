@@ -1,6 +1,12 @@
 import dotenv from 'dotenv'
+import { dirname, resolve } from 'path'
+import { fileURLToPath } from 'url'
 
-dotenv.config()
+const serverRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const projectRoot = resolve(serverRoot, '..')
+
+dotenv.config({ path: resolve(projectRoot, '.env') })
+dotenv.config({ path: resolve(serverRoot, '.env'), override: true })
 
 export const env = {
   port: Number(process.env.PORT || 5000),
@@ -9,6 +15,7 @@ export const env = {
     .map((origin) => origin.trim())
     .filter(Boolean),
   jwtSecret: process.env.JWT_SECRET || 'phishguard_dev_secret_change_me',
+  aiImageModelUrl: process.env.AI_IMAGE_MODEL_URL || '',
   db: {
     host: process.env.DB_HOST || 'localhost',
     port: Number(process.env.DB_PORT || 3306),

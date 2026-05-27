@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS phishing_checks (
   detected_indicators JSON NOT NULL,
   explanation TEXT NOT NULL,
   analyzed_at DATETIME NOT NULL,
+  deleted_at DATETIME NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_phishing_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
@@ -39,6 +40,7 @@ CREATE TABLE IF NOT EXISTS image_checks (
   indicators JSON NOT NULL,
   explanation TEXT NOT NULL,
   analyzed_at DATETIME NOT NULL,
+  deleted_at DATETIME NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_image_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
@@ -52,6 +54,7 @@ CREATE TABLE IF NOT EXISTS detection_results (
   status VARCHAR(80) NOT NULL,
   indicators JSON NOT NULL,
   explanation TEXT NOT NULL,
+  deleted_at DATETIME NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_detection_source (source_type, source_id),
   INDEX idx_detection_created (created_at),

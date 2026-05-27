@@ -1,6 +1,6 @@
-import { AlertOctagon, BarChart3, Download, FileSearch, Image, RefreshCw, ShieldAlert, ShieldCheck } from 'lucide-react'
+import { AlertOctagon, BarChart3, Download, FileSearch, Image, RefreshCw, ShieldAlert, ShieldCheck, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { getDashboardStats, getHealth, getHistory } from '../services/api.js'
+import { clearMyHistory, getDashboardStats, getHealth, getHistory } from '../services/api.js'
 
 export default function Dashboard() {
   const [history, setHistory] = useState([])
@@ -14,6 +14,9 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const [isClearing, setIsClearing] = useState(false)
 
   useEffect(() => {
     loadDashboard('')
@@ -22,6 +25,7 @@ export default function Dashboard() {
   async function loadDashboard(searchValue = search) {
     setIsLoading(true)
     setError('')
+    setSuccessMessage('')
 
     try {
       const [statsResult, historyResult, healthResult] = await Promise.all([
@@ -69,6 +73,24 @@ export default function Dashboard() {
     URL.revokeObjectURL(url)
   }
 
+  async function handleClearHistory() {
+    setIsClearing(true)
+    setError('')
+    setSuccessMessage('')
+
+    try {
+      await clearMyHistory()
+      setIsConfirmOpen(false)
+      setSearch('')
+      await loadDashboard('')
+      setSuccessMessage('Your scan history was cleared.')
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setIsClearing(false)
+    }
+  }
+
   const databaseConnected = health.database === 'connected'
 
   return (
@@ -85,6 +107,10 @@ export default function Dashboard() {
           <button type="button" className="secondary-button py-2" onClick={downloadHistory}>
             <Download size={16} />
             Export CSV
+          </button>
+          <button type="button" className="secondary-button py-2 text-cyber-red hover:border-cyber-red/40 hover:bg-cyber-red/10" onClick={() => setIsConfirmOpen(true)}>
+            <Trash2 size={16} />
+            Clear History
           </button>
           <button type="button" className="secondary-button py-2" onClick={() => loadDashboard(search)}>
             <RefreshCw size={16} />
@@ -107,6 +133,11 @@ export default function Dashboard() {
       {error && (
         <div className="rounded-xl border border-cyber-red/25 bg-cyber-red/10 p-4 text-sm text-cyber-red">
           {error}
+        </div>
+      )}
+      {successMessage && (
+        <div className="rounded-xl border border-cyber-green/25 bg-cyber-green/10 p-4 text-sm text-cyber-green">
+          {successMessage}
         </div>
       )}
 
@@ -191,6 +222,25 @@ export default function Dashboard() {
           </table>
         </div>
       </section>
+
+      {isConfirmOpen && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 px-4">
+          <div className="w-full max-w-md rounded-xl border border-white/10 bg-navy-900 p-6 shadow-2xl">
+            <h2 className="text-xl font-semibold text-white">Clear scan history?</h2>
+            <p className="mt-3 text-sm leading-6 text-slate-400">
+              Are you sure you want to delete your scan history? This action cannot be undone.
+            </p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <button className="secondary-button" type="button" onClick={() => setIsConfirmOpen(false)} disabled={isClearing}>
+                Cancel
+              </button>
+              <button className="primary-button bg-cyber-red text-white hover:bg-red-400" type="button" onClick={handleClearHistory} disabled={isClearing}>
+                {isClearing ? 'Clearing...' : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

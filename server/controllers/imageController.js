@@ -8,7 +8,7 @@ export async function analyzeImageController(request, response, next) {
       return
     }
 
-    const result = analyzeImageFile(request.file)
+    const result = await analyzeImageFile(request.file)
     let persisted = true
     let checkId = null
 

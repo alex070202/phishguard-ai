@@ -15,6 +15,7 @@ export async function getAdminStats() {
   const [[stats]] = await pool.query(`
     SELECT
       (SELECT COUNT(*) FROM users) AS users,
+      (SELECT COUNT(*) FROM users WHERE status = 'pending') AS pendingUsers,
       (SELECT COUNT(*) FROM users WHERE status = 'banned') AS bannedUsers,
       (SELECT COUNT(*) FROM phishing_checks) AS phishingChecks,
       (SELECT COUNT(*) FROM image_checks) AS imageChecks,

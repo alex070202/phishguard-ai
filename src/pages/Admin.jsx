@@ -52,6 +52,7 @@ export default function Admin() {
 
   const statCards = [
     ['Users', stats.users || 0],
+    ['Pending users', stats.pendingUsers || 0],
     ['Banned users', stats.bannedUsers || 0],
     ['Phishing checks', stats.phishingChecks || 0],
     ['Image checks', stats.imageChecks || 0],
@@ -100,13 +101,14 @@ export default function Admin() {
           <h2 className="flex items-center gap-2 text-xl font-semibold text-white"><Users size={20} /> Users</h2>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px] text-left text-sm">
+          <table className="w-full min-w-[860px] text-left text-sm">
             <thead className="bg-white/5 text-slate-400">
               <tr>
                 <th className="px-5 py-3">Name</th>
                 <th className="px-5 py-3">Email</th>
                 <th className="px-5 py-3">Role</th>
                 <th className="px-5 py-3">Status</th>
+                <th className="px-5 py-3">Email verified</th>
                 <th className="px-5 py-3">Action</th>
               </tr>
             </thead>
@@ -117,6 +119,7 @@ export default function Admin() {
                   <td className="px-5 py-4 text-slate-300">{user.email}</td>
                   <td className="px-5 py-4 text-slate-300">{user.role}</td>
                   <td className="px-5 py-4 text-slate-300">{user.status}</td>
+                  <td className="px-5 py-4 text-slate-300">{user.emailVerified ? 'Yes' : 'No'}</td>
                   <td className="px-5 py-4">
                     <button className="secondary-button py-2" type="button" onClick={() => toggleBan(user)} disabled={user.role === 'admin'}>
                       {user.status === 'banned' ? <CheckCircle2 size={16} /> : <Ban size={16} />}

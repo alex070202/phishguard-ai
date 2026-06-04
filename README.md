@@ -12,6 +12,9 @@ The platform is designed as a realistic SaaS-style security workspace with authe
 ## Main Features
 
 - User registration and login
+- Email verification before account activation
+- Confirm password validation during registration
+- Forgot password and secure password reset flow
 - JWT-based authentication
 - Protected user dashboard
 - User-scoped scan history
@@ -114,6 +117,8 @@ Backend:
 - Multer
 - bcrypt password hashing
 - JWT authentication
+- Nodemailer email delivery
+- Express rate limiting for authentication endpoints
 - dotenv configuration
 
 Optional ML service:
@@ -172,7 +177,17 @@ DB_PASSWORD
 DB_NAME
 JWT_SECRET
 AI_IMAGE_MODEL_URL
+APP_FRONTEND_URL
+APP_BACKEND_URL
+EMAIL_HOST
+EMAIL_PORT
+EMAIL_SECURE
+EMAIL_USER
+EMAIL_PASS
+EMAIL_FROM
 ```
+
+For Gmail SMTP, use a Gmail App Password for `EMAIL_PASS`. Do not use a personal Gmail password and do not commit real email credentials to GitHub.
 
 Run database migrations:
 
@@ -233,9 +248,35 @@ Authentication:
 ```http
 POST /api/auth/register
 POST /api/auth/login
+GET /api/auth/verify-email?token=...
+POST /api/auth/forgot-password
+POST /api/auth/reset-password
 GET /api/auth/me
 POST /api/auth/logout
 ```
+
+## Authentication Flow
+
+Registration now uses email confirmation:
+
+1. A user submits name, email, password and confirm password.
+2. The backend validates the fields, hashes the password and creates a pending account.
+3. PhishGuard AI sends a verification email through the configured SMTP provider.
+4. The user opens the verification link.
+5. The backend marks the account as verified and active.
+6. The user can log in and access the protected dashboard.
+
+Unverified users cannot log in. Banned users remain blocked from login and protected routes.
+
+Password reset flow:
+
+1. The user requests a reset link from the Forgot Password page.
+2. The backend returns a generic success message whether or not the email exists.
+3. If the account exists, a time-limited reset token is generated and emailed.
+4. The user opens the reset link and submits a new password with confirmation.
+5. The backend hashes the new password and clears the reset token.
+
+Verification and reset tokens are stored as hashes in the database.
 
 Analysis:
 

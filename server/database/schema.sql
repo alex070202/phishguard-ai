@@ -7,7 +7,12 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(180) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
   role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
-  status ENUM('active', 'banned') NOT NULL DEFAULT 'active',
+  status ENUM('pending', 'active', 'banned') NOT NULL DEFAULT 'pending',
+  email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+  email_verification_token VARCHAR(255) NULL,
+  email_verification_expires DATETIME NULL,
+  password_reset_token VARCHAR(255) NULL,
+  password_reset_expires DATETIME NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );

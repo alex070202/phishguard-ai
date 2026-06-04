@@ -111,6 +111,26 @@ export function register(payload) {
   })
 }
 
+export function verifyEmail(token) {
+  return requestJson(`/auth/verify-email?token=${encodeURIComponent(token)}`)
+}
+
+export function forgotPassword(payload) {
+  return requestJson('/auth/forgot-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
+export function resetPassword(payload) {
+  return requestJson('/auth/reset-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
 export function login(payload) {
   return requestJson('/auth/login', {
     method: 'POST',

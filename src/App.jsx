@@ -10,6 +10,7 @@ import Contact from './pages/Contact.jsx'
 import CookiePolicy from './pages/CookiePolicy.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import FAQ from './pages/FAQ.jsx'
+import ForgotPassword from './pages/ForgotPassword.jsx'
 import Home from './pages/Home.jsx'
 import ImageDetector from './pages/ImageDetector.jsx'
 import Login from './pages/Login.jsx'
@@ -17,9 +18,11 @@ import NotFound from './pages/NotFound.jsx'
 import PhishingAnalyzer from './pages/PhishingAnalyzer.jsx'
 import PrivacyPolicy from './pages/PrivacyPolicy.jsx'
 import Register from './pages/Register.jsx'
+import ResetPassword from './pages/ResetPassword.jsx'
 import SecurityPolicy from './pages/SecurityPolicy.jsx'
 import TermsOfService from './pages/TermsOfService.jsx'
 import Unauthorized from './pages/Unauthorized.jsx'
+import VerifyEmail from './pages/VerifyEmail.jsx'
 
 export default function App() {
   return (
@@ -34,6 +37,9 @@ export default function App() {
           <Route path="/admin" element={<ProtectedRoute requireAdmin><Admin /></ProtectedRoute>} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/about" element={<About />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />

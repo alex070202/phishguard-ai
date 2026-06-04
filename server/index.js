@@ -11,6 +11,10 @@ import { phishingRoutes } from './routes/phishingRoutes.js'
 
 const app = express()
 
+if (!env.email.user || !env.email.pass) {
+  console.warn('Email delivery is not fully configured. Set EMAIL_USER and EMAIL_PASS for verification and password reset emails.')
+}
+
 app.use(
   cors({
     origin(origin, callback) {

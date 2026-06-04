@@ -19,10 +19,17 @@ async function runMigration() {
   try {
     await connection.query(sql)
     await ensureColumn(connection, dbName, 'users', 'password_hash', 'VARCHAR(255) NULL')
-    await ensureColumn(connection, dbName, 'users', 'status', "ENUM('active', 'banned') NOT NULL DEFAULT 'active'")
+    await ensureColumn(connection, dbName, 'users', 'status', "ENUM('pending', 'active', 'banned') NOT NULL DEFAULT 'pending'")
+    await connection.query("ALTER TABLE users MODIFY status ENUM('pending', 'active', 'banned') NOT NULL DEFAULT 'pending'")
+    await ensureColumn(connection, dbName, 'users', 'email_verified', 'BOOLEAN NOT NULL DEFAULT FALSE AFTER status')
+    await ensureColumn(connection, dbName, 'users', 'email_verification_token', 'VARCHAR(255) NULL AFTER email_verified')
+    await ensureColumn(connection, dbName, 'users', 'email_verification_expires', 'DATETIME NULL AFTER email_verification_token')
+    await ensureColumn(connection, dbName, 'users', 'password_reset_token', 'VARCHAR(255) NULL AFTER email_verification_expires')
+    await ensureColumn(connection, dbName, 'users', 'password_reset_expires', 'DATETIME NULL AFTER password_reset_token')
     await ensureColumn(connection, dbName, 'users', 'updated_at', 'TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')
     await connection.query("UPDATE users SET role = 'user' WHERE role NOT IN ('user', 'admin')")
     await connection.query("ALTER TABLE users MODIFY role ENUM('user', 'admin') NOT NULL DEFAULT 'user'")
+    await connection.query("UPDATE users SET email_verified = TRUE WHERE status = 'active'")
 
     await ensureColumn(connection, dbName, 'phishing_checks', 'subject', 'VARCHAR(255) NULL AFTER user_id')
     await ensureColumn(connection, dbName, 'phishing_checks', 'deleted_at', 'DATETIME NULL AFTER analyzed_at')
@@ -48,12 +55,13 @@ async function runMigration() {
     const adminPasswordHash = await bcrypt.hash('Admin123!', 12)
     const fallbackPasswordHash = await bcrypt.hash('ChangeMe123!', 12)
     await connection.execute(
-      `INSERT INTO users (name, email, password_hash, role, status)
-       VALUES (?, ?, ?, 'admin', 'active')
+      `INSERT INTO users (name, email, password_hash, role, status, email_verified)
+       VALUES (?, ?, ?, 'admin', 'active', TRUE)
        ON DUPLICATE KEY UPDATE
          name = VALUES(name),
          role = 'admin',
          status = 'active',
+         email_verified = TRUE,
          password_hash = IF(password_hash IS NULL OR password_hash = '', VALUES(password_hash), password_hash)`,
       ['Demo Admin', 'admin@phishguard.ai', adminPasswordHash],
     )

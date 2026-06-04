@@ -48,7 +48,10 @@ export default function Login() {
             />
           </label>
           <label className="block">
-            <span className="mb-2 block text-sm font-medium text-slate-300">Password</span>
+            <span className="mb-2 flex items-center justify-between gap-3 text-sm font-medium text-slate-300">
+              Password
+              <Link className="text-xs font-semibold text-cyber-cyan hover:text-cyan-300" to="/forgot-password">Forgot password?</Link>
+            </span>
             <input
               className="input-field"
               type="password"

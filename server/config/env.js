@@ -16,6 +16,16 @@ export const env = {
     .filter(Boolean),
   jwtSecret: process.env.JWT_SECRET || 'phishguard_dev_secret_change_me',
   aiImageModelUrl: process.env.AI_IMAGE_MODEL_URL || '',
+  appFrontendUrl: process.env.APP_FRONTEND_URL || 'http://localhost:5173',
+  appBackendUrl: process.env.APP_BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`,
+  email: {
+    host: process.env.EMAIL_HOST || '',
+    port: Number(process.env.EMAIL_PORT || 587),
+    secure: String(process.env.EMAIL_SECURE || 'false').toLowerCase() === 'true',
+    user: process.env.EMAIL_USER || '',
+    pass: process.env.EMAIL_PASS || '',
+    from: process.env.EMAIL_FROM || process.env.EMAIL_USER || 'bvbankov73@gmail.com',
+  },
   db: {
     host: process.env.DB_HOST || 'localhost',
     port: Number(process.env.DB_PORT || 3306),

@@ -9,6 +9,7 @@
     "dev:backend": "node server/index.js",
     "dev:full": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "db:migrate": "node server/database/migrate.js",
+    "test:phishing": "node --test server/agents/phishingAgent.test.js",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint ."

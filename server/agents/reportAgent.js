@@ -1,9 +1,13 @@
 export function buildPhishingReport({ riskScore, riskLevel, detectedIndicators }) {
   const labels = detectedIndicators.map((indicator) => indicator.label.toLowerCase())
-  const explanation =
+  const generalExplanation =
     detectedIndicators.length > 0
       ? `The email was classified as ${riskLevel.toLowerCase()} risk because it contains ${labels.join(', ')}.`
       : 'The email did not match the current high-risk phishing rules.'
+  const prizeExplanation = detectedIndicators.some((indicator) => indicator.key === 'bulgarian_prize_scam_phrase')
+    ? 'The email contains Bulgarian prize/winner language commonly used in phishing campaigns.'
+    : ''
+  const explanation = [prizeExplanation, generalExplanation].filter(Boolean).join(' ')
 
   const recommendations =
     riskScore >= 66

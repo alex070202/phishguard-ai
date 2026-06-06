@@ -5,18 +5,36 @@ const shorteners = ['bit.ly', 'tinyurl.com', 't.co', 'goo.gl', 'ow.ly', 'cutt.ly
 const urgencyWords = ['urgent', 'immediately', 'suspended', 'verify', 'confirm', '24 hours', 'limited time', 'account locked']
 const dangerousKeywords = ['password', 'credentials', 'bank', 'card', 'payment', 'security code', 'wire transfer', 'invoice']
 const suspiciousTlds = ['zip', 'mov', 'click', 'top', 'xyz', 'work']
+
 const bulgarianPrizePhrases = [
-  'честито',
   'печелиш',
+  'печелите',
+  'спечели',
   'спечелихте',
-  'награда',
-  'получавате награда',
+  'печеливш',
+  'печеливша',
+  'печеливши',
+  'победител',
+  'победители',
   'избран сте',
+  'избрани сте',
+  'награда',
+  'наградата',
+  'получавате награда',
+  'честито',
+  'вие сте нашият печеливш',
   'вие сте победител',
-  'вземете наградата си',
+  'вземете наградата',
+  'получите наградата',
+]
+const bulgarianPrizePatterns = [
+  /вие\s+сте\s+.*печеливш/i,
+  /вие\s+сте\s+.*победител/i,
+  /наш(ият|ия|ата|ите)?\s+печеливш/i,
+  /честито.*(печел|наград|победител)/i,
+  /(спечел|печел|наград|победител)/i,
 ]
 const bulgarianAccountThreatPhrases = [
-  'профилът ви е в заплаха',
   'профилът ви е в заплаха',
   'акаунтът ви ще бъде блокиран',
   'акаунтът ви е ограничен',
@@ -51,6 +69,7 @@ const bulgarianSuspiciousActionPhrases = [
   'въведете паролата си',
   'въведете данните си',
 ]
+const bulgarianSensitiveDataPhrases = ['въведете паролата си', 'въведете данните си']
 
 function getDomain(email) {
   return email.split('@')[1]?.toLowerCase().trim() || ''
@@ -68,8 +87,53 @@ function getRootToken(domain) {
   return domain.split('.')[0] || ''
 }
 
+function normalizeContent(value) {
+  return String(value || '')
+    .normalize('NFKC')
+    .toLocaleLowerCase('bg-BG')
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 function getMatches(content, phrases) {
   return phrases.filter((phrase) => content.includes(phrase))
+}
+
+function getPatternMatches(content, patterns) {
+  return patterns.flatMap((pattern) => {
+    const match = content.match(pattern)
+    return match?.[0] ? [match[0]] : []
+  })
+}
+
+function uniqueMatches(matches) {
+  return [...new Set(matches)]
+}
+
+function getContextualMinimumScore(detectedIndicators) {
+  const detectedKeys = new Set(detectedIndicators.map((indicator) => indicator.key))
+  const prizeScamDetected = detectedKeys.has('bulgarian_prize_scam_phrase')
+  const suspiciousActionDetected = detectedKeys.has('suspicious_action_phrase')
+  const sensitiveDataDetected = detectedKeys.has('sensitive_data_request')
+  const suspiciousUrlDetected = [
+    'shortened_url',
+    'suspicious_links',
+    'domain_mismatch',
+    'suspicious_tld',
+  ].some((key) => detectedKeys.has(key))
+
+  let minimumScore = prizeScamDetected ? 35 : 0
+
+  if (prizeScamDetected && suspiciousActionDetected) minimumScore = 66
+  if (prizeScamDetected && suspiciousUrlDetected) minimumScore = 75
+  if (prizeScamDetected && sensitiveDataDetected) minimumScore = 85
+
+  if (detectedKeys.has('account_threat_language') && detectedKeys.has('bulgarian_urgency_phrase')) {
+    minimumScore = Math.max(minimumScore, 66)
+  }
+
+  return minimumScore
 }
 
 export function analyzePhishing(payload) {
@@ -77,15 +141,19 @@ export function analyzePhishing(payload) {
   const suspiciousUrl = String(payload.suspiciousUrl || '').trim()
   const emailContent = String(payload.emailContent || '').trim()
   const subject = String(payload.subject || '').trim()
-  const content = `${subject} ${emailContent}`.toLocaleLowerCase('bg-BG')
+  const content = normalizeContent(`${subject} ${emailContent}`)
   const senderDomain = getDomain(senderEmail)
   const urlHost = getUrlHost(suspiciousUrl)
   const urlParts = suspiciousUrl.match(/https?:\/\/[^\s]+/gi) || []
-  const prizeMatches = getMatches(content, bulgarianPrizePhrases)
+  const prizeMatches = uniqueMatches([
+    ...getMatches(content, bulgarianPrizePhrases),
+    ...getPatternMatches(content, bulgarianPrizePatterns),
+  ])
   const accountThreatMatches = getMatches(content, bulgarianAccountThreatPhrases)
   const bulgarianUrgencyMatches = getMatches(content, bulgarianUrgencyPhrases)
   const bankingMatches = getMatches(content, bulgarianBankingPhrases)
   const suspiciousActionMatches = getMatches(content, bulgarianSuspiciousActionPhrases)
+  const sensitiveDataMatches = getMatches(content, bulgarianSensitiveDataPhrases)
 
   const indicatorMatches = [
     {
@@ -176,8 +244,8 @@ export function analyzePhishing(payload) {
       key: 'sensitive_data_request',
       label: 'Sensitive data request detected',
       weight: 30,
-      detected: suspiciousActionMatches.some((phrase) => phrase.includes('паролата') || phrase.includes('данните')),
-      evidence: suspiciousActionMatches.join(', '),
+      detected: sensitiveDataMatches.length > 0,
+      evidence: sensitiveDataMatches.join(', '),
     },
     {
       key: 'suspicious_action_phrase',
@@ -188,7 +256,9 @@ export function analyzePhishing(payload) {
     },
   ]
 
-  const { score, detectedIndicators } = scoreIndicators(8, indicatorMatches)
+  const scoredResult = scoreIndicators(8, indicatorMatches)
+  const score = Math.max(scoredResult.score, getContextualMinimumScore(scoredResult.detectedIndicators))
+  const detectedIndicators = scoredResult.detectedIndicators
   const riskLevel = riskLevelFromScore(score)
   const { explanation, recommendations } = buildPhishingReport({ riskScore: score, riskLevel, detectedIndicators })
   const analyzedAt = new Date().toISOString()

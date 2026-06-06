@@ -1,10 +1,13 @@
 import { UserPlus } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext.jsx'
+import { translateError } from '../i18n/display.js'
 
 export default function Register() {
   const { registerUser } = useAuth()
+  const { t } = useTranslation()
   const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '' })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -16,33 +19,33 @@ export default function Register() {
     setSuccess('')
 
     if (!formData.name.trim() || !formData.email.trim() || !formData.password || !formData.confirmPassword) {
-      setError('All fields are required.')
+      setError(t('auth.allRequired'))
       return
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      setError('Enter a valid email address.')
+      setError(t('auth.validEmail'))
       return
     }
 
     if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters.')
+      setError(t('auth.passwordLength'))
       return
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Password and confirmation password must match.')
+      setError(t('auth.passwordMismatch'))
       return
     }
 
     setIsLoading(true)
 
     try {
-      const result = await registerUser(formData)
-      setSuccess(result.message || 'Please check your email to verify your account.')
+      await registerUser(formData)
+      setSuccess(t('auth.checkEmail'))
       setFormData({ name: '', email: '', password: '', confirmPassword: '' })
     } catch (requestError) {
-      setError(requestError.message)
+      setError(translateError(t, requestError.message))
     } finally {
       setIsLoading(false)
     }
@@ -52,24 +55,24 @@ export default function Register() {
     <section className="mx-auto max-w-md">
       <div className="panel p-7">
         <UserPlus className="text-cyber-green" size={32} />
-        <h1 className="mt-4 text-3xl font-bold text-white">Register</h1>
-        <p className="mt-2 text-sm leading-6 text-slate-400">Create an analyst account. Dashboard records will be scoped to your user profile.</p>
+        <h1 className="mt-4 text-3xl font-bold text-white">{t('auth.registerTitle')}</h1>
+        <p className="mt-2 text-sm leading-6 text-slate-400">{t('auth.registerDescription')}</p>
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           <label className="block">
-            <span className="mb-2 block text-sm font-medium text-slate-300">Name</span>
+            <span className="mb-2 block text-sm font-medium text-slate-300">{t('common.name')}</span>
             <input className="input-field" value={formData.name} onChange={(event) => setFormData((current) => ({ ...current, name: event.target.value }))} required />
           </label>
           <label className="block">
-            <span className="mb-2 block text-sm font-medium text-slate-300">Email</span>
+            <span className="mb-2 block text-sm font-medium text-slate-300">{t('common.email')}</span>
             <input className="input-field" type="email" value={formData.email} onChange={(event) => setFormData((current) => ({ ...current, email: event.target.value }))} required />
           </label>
           <label className="block">
-            <span className="mb-2 block text-sm font-medium text-slate-300">Password</span>
+            <span className="mb-2 block text-sm font-medium text-slate-300">{t('common.password')}</span>
             <input className="input-field" type="password" minLength={8} value={formData.password} onChange={(event) => setFormData((current) => ({ ...current, password: event.target.value }))} required />
           </label>
           <label className="block">
-            <span className="mb-2 block text-sm font-medium text-slate-300">Confirm Password</span>
+            <span className="mb-2 block text-sm font-medium text-slate-300">{t('auth.confirmPassword')}</span>
             <input className="input-field" type="password" minLength={8} value={formData.confirmPassword} onChange={(event) => setFormData((current) => ({ ...current, confirmPassword: event.target.value }))} required />
           </label>
 
@@ -78,12 +81,12 @@ export default function Register() {
 
           <button className="primary-button w-full disabled:opacity-60" type="submit" disabled={isLoading}>
             <UserPlus size={18} />
-            {isLoading ? 'Creating account...' : 'Create account'}
+            {isLoading ? t('auth.creatingAccount') : t('auth.createAccount')}
           </button>
         </form>
 
         <p className="mt-5 text-sm text-slate-400">
-          Already registered? <Link className="font-semibold text-cyber-cyan hover:text-cyan-300" to="/login">Sign in</Link>
+          {t('auth.alreadyRegistered')} <Link className="font-semibold text-cyber-cyan hover:text-cyan-300" to="/login">{t('auth.signIn')}</Link>
         </p>
       </div>
     </section>

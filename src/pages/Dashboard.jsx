@@ -1,8 +1,11 @@
 import { AlertOctagon, BarChart3, Download, FileSearch, Image, RefreshCw, ShieldAlert, ShieldCheck, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { translateError, translateStatus } from '../i18n/display.js'
 import { clearMyHistory, getDashboardStats, getHealth, getHistory } from '../services/api.js'
 
 export default function Dashboard() {
+  const { t } = useTranslation()
   const [history, setHistory] = useState([])
   const [statsData, setStatsData] = useState({
     totalChecks: 0,
@@ -42,7 +45,7 @@ export default function Dashboard() {
       setHistory(historyResult)
       setHealth(healthResult)
     } catch (requestError) {
-      setError(requestError.message)
+      setError(translateError(t, requestError.message))
     } finally {
       setIsLoading(false)
     }
@@ -50,16 +53,16 @@ export default function Dashboard() {
 
   const stats = useMemo(
     () => [
-      { label: 'Total checks', value: statsData.totalChecks, icon: BarChart3, tone: 'text-cyber-cyan' },
-      { label: 'Phishing checks', value: statsData.phishingChecks, icon: FileSearch, tone: 'text-cyber-blue' },
-      { label: 'Image checks', value: statsData.imageChecks, icon: Image, tone: 'text-cyber-green' },
-      { label: 'High risk detections', value: statsData.highRiskDetections, icon: AlertOctagon, tone: 'text-cyber-red' },
+      { label: t('dashboard.total'), value: statsData.totalChecks, icon: BarChart3, tone: 'text-cyber-cyan' },
+      { label: t('dashboard.phishing'), value: statsData.phishingChecks, icon: FileSearch, tone: 'text-cyber-blue' },
+      { label: t('dashboard.images'), value: statsData.imageChecks, icon: Image, tone: 'text-cyber-green' },
+      { label: t('dashboard.highRisk'), value: statsData.highRiskDetections, icon: AlertOctagon, tone: 'text-cyber-red' },
     ],
-    [statsData],
+    [statsData, t],
   )
 
   function downloadHistory() {
-    const header = ['ID', 'Type', 'Target', 'Score', 'Status', 'Date']
+    const header = [t('dashboard.id'), t('common.type'), t('common.target'), t('common.score'), t('common.status'), t('common.date')]
     const rows = history.map((item) => [item.id, item.type, item.target, `${item.score}%`, item.status, item.date])
     const csv = [header, ...rows]
       .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(','))
@@ -83,9 +86,9 @@ export default function Dashboard() {
       setIsConfirmOpen(false)
       setSearch('')
       await loadDashboard('')
-      setSuccessMessage('Your scan history was cleared.')
+      setSuccessMessage(t('dashboard.cleared'))
     } catch (requestError) {
-      setError(requestError.message)
+      setError(translateError(t, requestError.message))
     } finally {
       setIsClearing(false)
     }
@@ -97,24 +100,24 @@ export default function Dashboard() {
     <div className="space-y-8">
       <section className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyber-cyan">Security overview</p>
-          <h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl">Dashboard</h1>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyber-cyan">{t('dashboard.eyebrow')}</p>
+          <h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl">{t('dashboard.title')}</h1>
           <p className="mt-4 max-w-2xl leading-7 text-slate-400">
-            Operational view for stored phishing and image detection checks from the backend.
+            {t('dashboard.description')}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button type="button" className="secondary-button py-2" onClick={downloadHistory}>
             <Download size={16} />
-            Export CSV
+            {t('dashboard.export')}
           </button>
           <button type="button" className="secondary-button py-2 text-cyber-red hover:border-cyber-red/40 hover:bg-cyber-red/10" onClick={() => setIsConfirmOpen(true)}>
             <Trash2 size={16} />
-            Clear History
+            {t('dashboard.clear')}
           </button>
           <button type="button" className="secondary-button py-2" onClick={() => loadDashboard(search)}>
             <RefreshCw size={16} />
-            Refresh
+            {t('common.refresh')}
           </button>
           <div
             className={[
@@ -125,7 +128,7 @@ export default function Dashboard() {
             ].join(' ')}
           >
             {databaseConnected ? <ShieldCheck size={18} /> : <ShieldAlert size={18} />}
-            DB {health.database}
+            {t('dashboard.database')} {translateStatus(t, health.database)}
           </div>
         </div>
       </section>
@@ -158,7 +161,7 @@ export default function Dashboard() {
         <div className="flex flex-col gap-3 md:flex-row">
           <input
             className="input-field"
-            placeholder="Search by sender, subject, URL, content or risk level"
+            placeholder={t('dashboard.searchPlaceholder')}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             onKeyDown={(event) => {
@@ -166,33 +169,33 @@ export default function Dashboard() {
             }}
           />
           <button className="primary-button" type="button" onClick={() => loadDashboard(search)}>
-            Search
+            {t('common.search')}
           </button>
         </div>
       </section>
 
       <section className="panel overflow-hidden">
         <div className="border-b border-white/10 p-6">
-          <h2 className="text-xl font-semibold text-white">Analysis history</h2>
-          <p className="mt-2 text-sm text-slate-400">Recent backend results from both detection modules.</p>
+          <h2 className="text-xl font-semibold text-white">{t('dashboard.history')}</h2>
+          <p className="mt-2 text-sm text-slate-400">{t('dashboard.historyDescription')}</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead className="bg-white/5 text-slate-400">
               <tr>
-                <th className="px-6 py-4 font-medium">ID</th>
-                <th className="px-6 py-4 font-medium">Type</th>
-                <th className="px-6 py-4 font-medium">Target</th>
-                <th className="px-6 py-4 font-medium">Score</th>
-                <th className="px-6 py-4 font-medium">Status</th>
-                <th className="px-6 py-4 font-medium">Date</th>
+                <th className="px-6 py-4 font-medium">{t('dashboard.id')}</th>
+                <th className="px-6 py-4 font-medium">{t('common.type')}</th>
+                <th className="px-6 py-4 font-medium">{t('common.target')}</th>
+                <th className="px-6 py-4 font-medium">{t('common.score')}</th>
+                <th className="px-6 py-4 font-medium">{t('common.status')}</th>
+                <th className="px-6 py-4 font-medium">{t('common.date')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10">
               {isLoading && (
                 <tr>
                   <td className="px-6 py-8 text-center text-slate-400" colSpan="6">
-                    Loading analysis history from backend...
+                    {t('dashboard.loadingHistory')}
                   </td>
                 </tr>
               )}
@@ -200,12 +203,12 @@ export default function Dashboard() {
                 history.map((item) => (
                   <tr key={item.id} className="transition hover:bg-white/[0.035]">
                     <td className="px-6 py-4 font-semibold text-white">{item.id}</td>
-                    <td className="px-6 py-4 text-slate-300">{item.type}</td>
+                    <td className="px-6 py-4 text-slate-300">{translateStatus(t, item.type)}</td>
                     <td className="px-6 py-4 text-slate-300">{item.target}</td>
                     <td className="px-6 py-4 text-slate-300">{item.score}%</td>
                     <td className="px-6 py-4">
                       <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-slate-200">
-                        {item.status}
+                        {translateStatus(t, item.status)}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-slate-400">{item.date}</td>
@@ -214,7 +217,7 @@ export default function Dashboard() {
               {!isLoading && !history.length && (
                 <tr>
                   <td className="px-6 py-8 text-center text-slate-400" colSpan="6">
-                    {search ? 'No matching checks found for this account.' : 'No stored checks yet. Run an email or image analysis to populate this table.'}
+                    {search ? t('dashboard.noMatches') : t('dashboard.noHistory')}
                   </td>
                 </tr>
               )}
@@ -226,16 +229,16 @@ export default function Dashboard() {
       {isConfirmOpen && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 px-4">
           <div className="w-full max-w-md rounded-xl border border-white/10 bg-navy-900 p-6 shadow-2xl">
-            <h2 className="text-xl font-semibold text-white">Clear scan history?</h2>
+            <h2 className="text-xl font-semibold text-white">{t('dashboard.clearTitle')}</h2>
             <p className="mt-3 text-sm leading-6 text-slate-400">
-              Are you sure you want to delete your scan history? This action cannot be undone.
+              {t('dashboard.clearConfirm')}
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
               <button className="secondary-button" type="button" onClick={() => setIsConfirmOpen(false)} disabled={isClearing}>
-                Cancel
+                {t('common.cancel')}
               </button>
               <button className="primary-button bg-cyber-red text-white hover:bg-red-400" type="button" onClick={handleClearHistory} disabled={isClearing}>
-                {isClearing ? 'Clearing...' : 'Confirm'}
+                {isClearing ? t('dashboard.clearing') : t('common.confirm')}
               </button>
             </div>
           </div>

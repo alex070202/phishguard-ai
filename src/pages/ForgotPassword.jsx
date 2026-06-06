@@ -1,9 +1,12 @@
 import { MailCheck } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { forgotPassword } from '../services/api.js'
+import { translateError } from '../i18n/display.js'
 
 export default function ForgotPassword() {
+  const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
@@ -15,16 +18,16 @@ export default function ForgotPassword() {
     setMessage('')
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('Enter a valid email address.')
+      setError(t('auth.validEmail'))
       return
     }
 
     setIsLoading(true)
     try {
-      const result = await forgotPassword({ email })
-      setMessage(result.message || 'If an account with this email exists, a password reset link has been sent.')
+      await forgotPassword({ email })
+      setMessage(t('auth.forgotSuccess'))
     } catch (requestError) {
-      setError(requestError.message)
+      setError(translateError(t, requestError.message))
     } finally {
       setIsLoading(false)
     }
@@ -34,12 +37,12 @@ export default function ForgotPassword() {
     <section className="mx-auto max-w-md">
       <div className="panel p-7">
         <MailCheck className="text-cyber-cyan" size={32} />
-        <h1 className="mt-4 text-3xl font-bold text-white">Forgot password</h1>
-        <p className="mt-2 text-sm leading-6 text-slate-400">Request a secure reset link for your PhishGuard AI account.</p>
+        <h1 className="mt-4 text-3xl font-bold text-white">{t('auth.forgotTitle')}</h1>
+        <p className="mt-2 text-sm leading-6 text-slate-400">{t('auth.forgotDescription')}</p>
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           <label className="block">
-            <span className="mb-2 block text-sm font-medium text-slate-300">Email</span>
+            <span className="mb-2 block text-sm font-medium text-slate-300">{t('common.email')}</span>
             <input className="input-field" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
           </label>
 
@@ -48,12 +51,12 @@ export default function ForgotPassword() {
 
           <button className="primary-button w-full disabled:opacity-60" type="submit" disabled={isLoading}>
             <MailCheck size={18} />
-            {isLoading ? 'Sending link...' : 'Send reset link'}
+            {isLoading ? t('auth.sendingLink') : t('auth.sendResetLink')}
           </button>
         </form>
 
         <p className="mt-5 text-sm text-slate-400">
-          Remembered it? <Link className="font-semibold text-cyber-cyan hover:text-cyan-300" to="/login">Back to login</Link>
+          {t('auth.remembered')} <Link className="font-semibold text-cyber-cyan hover:text-cyan-300" to="/login">{t('auth.backLogin')}</Link>
         </p>
       </div>
     </section>

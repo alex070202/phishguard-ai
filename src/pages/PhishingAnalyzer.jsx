@@ -1,8 +1,10 @@
 import { AlertTriangle, CheckCircle2, Link2, MailWarning, Radar, ShieldX, Sparkles } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import ResultCard from '../components/ResultCard.jsx'
 import RecommendationList from '../components/RecommendationList.jsx'
 import RiskScoreCard from '../components/RiskScoreCard.jsx'
+import { translateError, translateIndicator, translateRecommendation, translateRiskLevel } from '../i18n/display.js'
 import { analyzePhishing } from '../services/api.js'
 
 const suspiciousSample = {
@@ -13,6 +15,7 @@ const suspiciousSample = {
 }
 
 export default function PhishingAnalyzer() {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState({
     subject: '',
     senderEmail: '',
@@ -36,7 +39,7 @@ export default function PhishingAnalyzer() {
       const nextResult = await analyzePhishing(formData)
       setResult(nextResult)
     } catch (requestError) {
-      setError(requestError.message)
+      setError(translateError(t, requestError.message))
     } finally {
       setIsLoading(false)
     }
@@ -51,33 +54,33 @@ export default function PhishingAnalyzer() {
   return (
     <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
       <section>
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyber-cyan">Phishing module</p>
-        <h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl">Phishing Email Analyzer</h1>
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyber-cyan">{t('phishing.eyebrow')}</p>
+        <h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl">{t('phishing.title')}</h1>
         <p className="mt-4 leading-7 text-slate-400">
-          Submit email metadata to the backend rule engine for risk scoring, explanation, and database logging.
+          {t('phishing.description')}
         </p>
 
         <form onSubmit={handleSubmit} className="panel mt-7 space-y-5 p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-slate-400">Use your own content or load a controlled test case for presentation.</p>
+            <p className="text-sm text-slate-400">{t('phishing.sampleHelp')}</p>
             <button type="button" className="secondary-button py-2" onClick={loadSuspiciousSample}>
               <Sparkles size={16} />
-              Load suspicious sample
+              {t('phishing.loadSample')}
             </button>
           </div>
 
           <label className="block">
-            <span className="mb-2 block text-sm font-medium text-slate-300">Subject</span>
+            <span className="mb-2 block text-sm font-medium text-slate-300">{t('phishing.subject')}</span>
             <input
               className="input-field"
-              placeholder="Профилът ви е в заплаха"
+              placeholder={t('phishing.subjectPlaceholder')}
               value={formData.subject}
               onChange={(event) => updateField('subject', event.target.value)}
             />
           </label>
 
           <label className="block">
-            <span className="mb-2 block text-sm font-medium text-slate-300">Sender email</span>
+            <span className="mb-2 block text-sm font-medium text-slate-300">{t('phishing.sender')}</span>
             <input
               className="input-field"
               type="email"
@@ -88,7 +91,7 @@ export default function PhishingAnalyzer() {
           </label>
 
           <label className="block">
-            <span className="mb-2 block text-sm font-medium text-slate-300">Suspicious URL</span>
+            <span className="mb-2 block text-sm font-medium text-slate-300">{t('phishing.url')}</span>
             <input
               className="input-field"
               type="url"
@@ -99,10 +102,10 @@ export default function PhishingAnalyzer() {
           </label>
 
           <label className="block">
-            <span className="mb-2 block text-sm font-medium text-slate-300">Email content</span>
+            <span className="mb-2 block text-sm font-medium text-slate-300">{t('phishing.content')}</span>
             <textarea
               className="input-field min-h-48 resize-y"
-              placeholder="Your account will be suspended in 24 hours. Confirm your identity immediately..."
+              placeholder={t('phishing.contentPlaceholder')}
               value={formData.emailContent}
               onChange={(event) => updateField('emailContent', event.target.value)}
             />
@@ -116,7 +119,7 @@ export default function PhishingAnalyzer() {
 
           <button type="submit" className="primary-button w-full disabled:cursor-not-allowed disabled:opacity-60" disabled={isLoading}>
             <Radar size={18} />
-            {isLoading ? 'Analyzing...' : 'Analyze'}
+            {isLoading ? t('phishing.analyzing') : t('phishing.analyze')}
           </button>
         </form>
       </section>
@@ -126,49 +129,49 @@ export default function PhishingAnalyzer() {
           <>
             <RiskScoreCard
               score={result.score}
-              label={result.level}
+              label={translateRiskLevel(t, result.level)}
               tone={result.tone}
-              caption={result.summary}
+              caption={t('phishing.resultSummary', { level: translateRiskLevel(t, result.level), count: result.indicators.length })}
             />
             {result.persistenceWarning && (
               <div className="rounded-xl border border-cyber-amber/25 bg-cyber-amber/10 p-4 text-sm text-cyber-amber">
-                Analysis completed, but database persistence failed: {result.persistenceWarning}
+                {t('phishing.persistenceWarning', { message: result.persistenceWarning })}
               </div>
             )}
 
             <div className="panel p-6">
               <div className="flex items-center gap-3">
                 <ShieldX className="text-cyber-red" size={24} />
-                <h2 className="text-xl font-semibold text-white">Detected indicators</h2>
+                <h2 className="text-xl font-semibold text-white">{t('phishing.detected')}</h2>
               </div>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 {result.indicators.map((indicator) => (
                   <div key={indicator} className="flex items-center gap-3 rounded-xl border border-cyber-red/20 bg-cyber-red/10 p-4">
                     <AlertTriangle className="shrink-0 text-cyber-red" size={18} />
-                    <span className="text-sm text-slate-200">{indicator}</span>
+                    <span className="text-sm text-slate-200">{translateIndicator(t, indicator)}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <ResultCard icon={MailWarning} title="Sender analysis" tone="red">
-                The sender is evaluated for invalid format, unusual domain characters, brand impersonation, and spoofing-like naming.
+              <ResultCard icon={MailWarning} title={t('phishing.senderAnalysis')} tone="red">
+                {t('phishing.senderAnalysisText')}
               </ResultCard>
-              <ResultCard icon={Link2} title="URL analysis" tone="amber">
-                The submitted link is checked for shortening services, insecure HTTP usage, and mismatch with the sender domain.
+              <ResultCard icon={Link2} title={t('phishing.urlAnalysis')} tone="amber">
+                {t('phishing.urlAnalysisText')}
               </ResultCard>
             </div>
 
-            <RecommendationList items={result.recommendations} tone={result.tone} />
+            <RecommendationList items={result.recommendations.map((item) => translateRecommendation(t, item))} tone={result.tone} />
           </>
         ) : (
           <div className="panel flex min-h-[28rem] items-center justify-center p-8 text-center">
             <div>
               <CheckCircle2 className="mx-auto text-cyber-green" size={42} />
-              <h2 className="mt-5 text-2xl font-semibold text-white">Ready to analyze</h2>
+              <h2 className="mt-5 text-2xl font-semibold text-white">{t('phishing.ready')}</h2>
               <p className="mt-3 max-w-md text-slate-400">
-                Submit the form to request a backend analysis and render the returned indicators.
+                {t('phishing.readyText')}
               </p>
             </div>
           </div>

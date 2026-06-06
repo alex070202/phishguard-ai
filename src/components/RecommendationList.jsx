@@ -1,6 +1,8 @@
 import { CheckCircle2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
-export default function RecommendationList({ title = 'Recommended actions', items = [], tone = 'cyan' }) {
+export default function RecommendationList({ title, items = [], tone = 'cyan' }) {
+  const { t } = useTranslation()
   const tones = {
     cyan: 'text-cyber-cyan bg-cyber-cyan/10 border-cyber-cyan/25',
     red: 'text-cyber-red bg-cyber-red/10 border-cyber-red/25',
@@ -10,7 +12,7 @@ export default function RecommendationList({ title = 'Recommended actions', item
 
   return (
     <div className="panel p-6">
-      <h2 className="text-xl font-semibold text-white">{title}</h2>
+      <h2 className="text-xl font-semibold text-white">{title || t('phishing.recommended')}</h2>
       <div className="mt-5 grid gap-3">
         {items.map((item) => (
           <div key={item} className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.035] p-4">

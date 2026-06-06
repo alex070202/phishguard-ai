@@ -32,6 +32,7 @@ The platform is designed as a realistic SaaS-style security workspace with authe
 - Audit logging for important actions
 - Admin user management with ban and unban actions
 - Footer pages for privacy, terms, cookies, security, FAQ and contact
+- English and Bulgarian user interface with persistent language selection
 
 ## Phishing Detection
 
@@ -106,6 +107,8 @@ Frontend:
 - Vite
 - Tailwind CSS
 - React Router
+- i18next
+- react-i18next
 - lucide-react
 
 Backend:
@@ -136,6 +139,11 @@ Optional ML service:
 src/
   components/
   context/
+  i18n/
+    i18n.js
+    locales/
+      en.json
+      bg.json
   pages/
   services/
 
@@ -154,6 +162,21 @@ ml-service/
   models/
   utils/
 ```
+
+## Internationalization
+
+The frontend supports English and Bulgarian. English is the default language.
+
+The fixed `EN` / `BG` language switcher is displayed in the lower-left corner. The selected language is stored in browser `localStorage` under `phishguard_language`, so it remains active after navigation, refresh, and later visits.
+
+Translation resources are located in:
+
+```text
+src/i18n/locales/en.json
+src/i18n/locales/bg.json
+```
+
+To add another language, create a new locale JSON file, register it in `src/i18n/i18n.js`, and add the language option to `src/components/LanguageSwitcher.jsx`.
 
 ## Local Setup
 

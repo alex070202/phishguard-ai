@@ -1,20 +1,22 @@
 import { Link, NavLink } from 'react-router-dom'
 import { Activity, BarChart3, FileSearch, Home, Image, LogOut, Menu, ShieldCheck, X } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext.jsx'
 
 const links = [
-  { to: '/', label: 'Home', icon: Home },
-  { to: '/phishing', label: 'Email Analyzer', icon: FileSearch },
-  { to: '/image-detector', label: 'Image Detector', icon: Image },
-  { to: '/dashboard', label: 'Dashboard', icon: BarChart3 },
+  { to: '/', labelKey: 'nav.home', icon: Home },
+  { to: '/phishing', labelKey: 'nav.phishing', icon: FileSearch },
+  { to: '/image-detector', labelKey: 'nav.image', icon: Image },
+  { to: '/dashboard', labelKey: 'nav.dashboard', icon: BarChart3 },
 ]
 
 export default function Navbar() {
+  const { t } = useTranslation()
   const { isAuthenticated, isAdmin, logoutUser, user } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
   const visibleLinks = isAdmin
-    ? [...links, { to: '/admin', label: 'Admin', icon: ShieldCheck }]
+    ? [...links, { to: '/admin', labelKey: 'nav.admin', icon: ShieldCheck }]
     : links
   const navLinkClass = ({ isActive }) =>
     [
@@ -34,18 +36,18 @@ export default function Navbar() {
             <p className="text-lg font-bold tracking-wide">PhishGuard AI</p>
             <p className="flex items-center gap-1 text-xs text-slate-400">
               <Activity size={12} />
-              Detection workspace
+              {t('nav.workspace')}
             </p>
           </div>
         </Link>
 
-          <button className="secondary-button px-3 py-2 lg:hidden" type="button" onClick={() => setIsOpen((current) => !current)} aria-label="Toggle navigation">
+          <button className="secondary-button px-3 py-2 lg:hidden" type="button" onClick={() => setIsOpen((current) => !current)} aria-label={t('nav.toggle')}>
             {isOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
 
         <div className={`${isOpen ? 'flex' : 'hidden'} mt-4 flex-col gap-2 lg:mt-0 lg:flex lg:flex-row lg:items-center lg:justify-end`}>
-          {visibleLinks.map(({ to, label, icon: Icon }) => (
+          {visibleLinks.map(({ to, labelKey, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
@@ -53,21 +55,21 @@ export default function Navbar() {
               onClick={() => setIsOpen(false)}
             >
               <Icon size={16} />
-              {label}
+              {t(labelKey)}
             </NavLink>
           ))}
           {isAuthenticated ? (
             <button type="button" className="inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-300 outline-none transition hover:bg-white/5 hover:text-white focus:ring-2 focus:ring-cyber-cyan/40" onClick={() => { logoutUser(); setIsOpen(false) }}>
               <LogOut size={16} />
-              {user?.name || 'Logout'}
+              {user?.name || t('nav.logout')}
             </button>
           ) : (
             <>
               <NavLink to="/login" className={navLinkClass} onClick={() => setIsOpen(false)}>
-                Login
+                {t('nav.login')}
               </NavLink>
               <NavLink to="/register" className={navLinkClass} onClick={() => setIsOpen(false)}>
-                Register
+                {t('nav.register')}
               </NavLink>
             </>
           )}

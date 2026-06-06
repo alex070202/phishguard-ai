@@ -39,7 +39,7 @@ export default function Register() {
 
     try {
       const result = await registerUser(formData)
-      setSuccess(result.message || 'Registration successful. Please check your email to confirm your account.')
+      setSuccess(result.message || 'Please check your email to verify your account.')
       setFormData({ name: '', email: '', password: '', confirmPassword: '' })
     } catch (requestError) {
       setError(requestError.message)

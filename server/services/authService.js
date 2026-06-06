@@ -65,7 +65,7 @@ export async function registerUser({ name, email, password, confirmPassword }) {
 
   await sendVerificationEmail({ to: normalizedEmail, name: user.name, token })
   return {
-    message: 'Registration successful. Please check your email to confirm your account.',
+    message: 'Please check your email to verify your account.',
     user: sanitizeUser(user),
   }
 }
@@ -88,7 +88,7 @@ export async function loginUser({ email, password }) {
   }
 
   if (user.status === 'pending' || !user.email_verified) {
-    const error = new Error('Please confirm your email before logging in.')
+    const error = new Error('Please verify your email before logging in.')
     error.statusCode = 403
     error.code = 'EMAIL_NOT_VERIFIED'
     error.userId = user.id
@@ -115,7 +115,7 @@ export async function verifyToken(token) {
   }
 
   if (user.status !== 'active' || !user.email_verified) {
-    const error = new Error('Please confirm your email before logging in.')
+    const error = new Error('Please verify your email before logging in.')
     error.statusCode = 403
     throw error
   }

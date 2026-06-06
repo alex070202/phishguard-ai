@@ -1,11 +1,12 @@
 import { CheckCircle2, Loader2, ShieldAlert } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { verifyEmail } from '../services/api.js'
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams()
   const [state, setState] = useState({ loading: true, error: '', message: '' })
+  const verifiedTokenRef = useRef('')
 
   useEffect(() => {
     async function confirmEmail() {
@@ -14,6 +15,11 @@ export default function VerifyEmail() {
         setState({ loading: false, error: 'Verification token is missing.', message: '' })
         return
       }
+
+      if (verifiedTokenRef.current === token) {
+        return
+      }
+      verifiedTokenRef.current = token
 
       try {
         const result = await verifyEmail(token)
